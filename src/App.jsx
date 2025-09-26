@@ -1,3 +1,4 @@
+// src/App.jsx
 import React, { useCallback, useState } from "react";
 import ReactFlow, {
   addEdge,
@@ -21,9 +22,9 @@ export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [allNodes, setAllNodes] = useState(availableNodes);
 
   const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), []);
-
   const onNodeClick = (event, node) => setSelectedNode(node);
 
   const updateNode = (updatedNode) => {
@@ -42,18 +43,35 @@ export default function App() {
       id: `${id++}`,
       type: nodeInfo.type,
       position: { x: Math.random() * 400, y: Math.random() * 400 },
-      data: { label: nodeInfo.label, options: nodeInfo.options || [] },
+      data: nodeInfo,
     };
     setNodes((nds) => [...nds, newNode]);
   };
 
-  return (
-    <div className="d-flex" style={{ height: "100vh", width: "100vw" }}>
-      {/* Sidebar */}
-      <Sidebar availableNodes={availableNodes} onAddNode={addNode} />
+  const saveCustomNode = (node) => {
+    setAllNodes((prev) => {
+      const exists = prev.find((n) => n.id === node.id);
+      if (exists) {
+        return prev.map((n) => (n.id === node.id ? node : n));
+      }
+      return [...prev, node];
+    });
+  };
 
-      {/* ReactFlow Canvas */}
-      <div className="flex-grow-1 border" style={{ position: "relative" }}>
+  const deleteCustomNode = (nodeId) => {
+    setAllNodes((prev) => prev.filter((n) => n.id !== nodeId));
+  };
+
+  return (
+    <div style={{ display: "flex", height: "100vh", width: "100vw" }}>
+      <Sidebar
+        availableNodes={allNodes}
+        onAddNode={addNode}
+        onSaveCustomNode={saveCustomNode}
+        onDeleteCustomNode={deleteCustomNode}
+      />
+
+      <div style={{ flexGrow: 1, border: "1px solid #ccc" }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -70,12 +88,7 @@ export default function App() {
         </ReactFlow>
       </div>
 
-      {/* Node Details Panel */}
-      <NodeDetailsPanel
-        node={selectedNode}
-        updateNode={updateNode}
-        deleteNode={deleteNode} // pass delete function
-      />
+      <NodeDetailsPanel node={selectedNode} updateNode={updateNode} deleteNode={deleteNode} />
     </div>
   );
 }

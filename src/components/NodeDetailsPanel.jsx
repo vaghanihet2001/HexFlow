@@ -9,6 +9,13 @@ export default function NodeDetailsPanel({ node, updateNode, deleteNode }) {
       </div>
     );
 
+  const handleFieldChange = (fieldId, key, value) => {
+    const updatedFields = node.data.fields.map((f) =>
+      f.id === fieldId ? { ...f, [key]: value } : f
+    );
+    updateNode({ ...node, data: { ...node.data, fields: updatedFields } });
+  };
+
   const handleChange = (key, value) => {
     updateNode({ ...node, data: { ...node.data, [key]: value } });
   };
@@ -20,7 +27,7 @@ export default function NodeDetailsPanel({ node, updateNode, deleteNode }) {
     >
       <h5 className="mb-3">Node Details</h5>
 
-      {/* Label Input */}
+      {/* Node Label */}
       <div className="mb-3">
         <label className="form-label">Label:</label>
         <input
@@ -31,7 +38,7 @@ export default function NodeDetailsPanel({ node, updateNode, deleteNode }) {
         />
       </div>
 
-      {/* Options Input */}
+      {/* Node Options (if any) */}
       {node.data.options && (
         <div className="mb-3">
           <label className="form-label">Options (comma separated):</label>
@@ -46,7 +53,79 @@ export default function NodeDetailsPanel({ node, updateNode, deleteNode }) {
         </div>
       )}
 
-      {/* Delete Node Button */}
+      {/* Custom Fields */}
+      {node.data.fields?.map((field) => (
+        <div key={field.id} className="mb-3 border rounded p-2 bg-white">
+          <label className="form-label">{field.label}</label>
+
+          {field.type === "text" && (
+            <input
+              type="text"
+              className="form-control"
+              value={field.value || ""}
+              onChange={(e) =>
+                handleFieldChange(field.id, "value", e.target.value)
+              }
+            />
+          )}
+
+          {field.type === "dropdown" && (
+            <select
+              className="form-select"
+              value={field.value || ""}
+              onChange={(e) =>
+                handleFieldChange(field.id, "value", e.target.value)
+              }
+            >
+              {field.options?.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {field.type === "radio" &&
+            field.options?.map((opt) => (
+              <div className="form-check" key={opt}>
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name={field.id}
+                  value={opt}
+                  checked={field.value === opt}
+                  onChange={() =>
+                    handleFieldChange(field.id, "value", opt)
+                  }
+                />
+                <label className="form-check-label">{opt}</label>
+              </div>
+            ))}
+
+          {field.type === "checkbox" &&
+            field.options?.map((opt) => (
+              <div className="form-check" key={opt}>
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={field.value?.includes(opt)}
+                  onChange={(e) => {
+                    let newValue = field.value || [];
+                    if (e.target.checked) {
+                      newValue = [...newValue, opt];
+                    } else {
+                      newValue = newValue.filter((v) => v !== opt);
+                    }
+                    handleFieldChange(field.id, "value", newValue);
+                  }}
+                />
+                <label className="form-check-label">{opt}</label>
+              </div>
+            ))}
+        </div>
+      ))}
+
+      {/* Delete Node Button at Bottom */}
       <button
         className="btn btn-danger mt-auto"
         onClick={() => deleteNode(node.id)}

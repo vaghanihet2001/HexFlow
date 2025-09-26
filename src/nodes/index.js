@@ -1,12 +1,11 @@
-import CustomNode1 from "./CustomNode1";
-import CustomNode2 from "./CustomNode2";
+// src/nodes.js
+
+import CustomNode from "./CustomNode";
 
 export const nodeTypes = {
-  customNode1: CustomNode1,
-  customNode2: CustomNode2,
+
+  customNode: CustomNode, // new dynamic renderer
 };
 
-export const availableNodes = [
-  { type: "customNode1", label: "Dropdown Node" },
-  { type: "customNode2", label: "Text+Checkbox Node" },
-];
+// Default built-in nodes
+export const availableNodes = [];
