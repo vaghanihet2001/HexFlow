@@ -173,7 +173,7 @@ export default function App() {
   const addNode = (nodeInfo) => {
     pushToHistory(nodes, edges);
     const newNode = {
-      id: `${idCounter++}`,
+      id: `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`, // unique
       type: nodeInfo.type,
       position: { x: Math.random() * 400, y: Math.random() * 400 },
       data: { ...nodeInfo, instanceId: Date.now() + Math.random() },

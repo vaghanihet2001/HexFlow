@@ -224,5 +224,25 @@
         "value": ""
       }
     ]
+  },
+  {
+    "id": "custom_1758889428768",
+    "type": "customNode",
+    "label": "Resizing",
+    "custom": true,
+    "color": "#aa8bfe",
+    "fields": [
+      {
+        "id": 1758889274883,
+        "type": "dropdown",
+        "label": "",
+        "options": [
+          "Off ",
+          " Normal ",
+          " Letter Boxing"
+        ],
+        "value": ""
+      }
+    ]
   }
 ]
