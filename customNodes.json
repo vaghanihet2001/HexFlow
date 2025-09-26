@@ -44,50 +44,185 @@
     ]
   },
   {
-    "id": "custom_1758867911345",
+    "id": "custom_1758879611363",
+    "type": "customNode",
+    "label": "CropEngine",
+    "custom": true,
+    "color": "#9aaefe",
+    "fields": [
+      {
+        "id": 1758879522630,
+        "type": "text",
+        "label": "Project",
+        "options": [],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_1758879791125",
     "type": "customNode",
     "label": "Camera",
     "custom": true,
-    "color": "#befefd",
+    "color": "#878787",
     "fields": [
       {
-        "id": 1758867883600,
+        "id": 1758879701944,
         "type": "dropdown",
         "label": "Type",
         "options": [
-          "USB ",
+          "Line Camera ",
+          " Area Camera "
+        ],
+        "value": ""
+      },
+      {
+        "id": 1758879723881,
+        "type": "dropdown",
+        "label": "Protocol",
+        "options": [
           "GIGI ",
-          "RTSP"
+          " USB",
+          " RTSP"
+        ],
+        "value": ""
+      },
+      {
+        "id": 1758879761235,
+        "type": "text",
+        "label": "Image Size",
+        "options": [],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_1758879927724",
+    "type": "customNode",
+    "label": "Trigger",
+    "custom": true,
+    "color": "#878787",
+    "fields": [
+      {
+        "id": 1758879723881,
+        "type": "dropdown",
+        "label": "Type",
+        "options": [
+          "Manual ",
+          " Stream ",
+          " PLC ",
+          " Proximerity"
         ],
         "value": ""
       }
     ]
   },
   {
-    "id": "custom_1758868234538",
+    "id": "custom_1758880129047",
     "type": "customNode",
-    "label": "Engine",
+    "label": "Cropping",
     "custom": true,
+    "color": "#b2f0c7",
     "fields": [
       {
-        "id": 1758868197392,
-        "type": "radio",
-        "label": ".ext",
-        "options": [
-          ".pt",
-          ".engine",
-          ".onnx"
-        ]
+        "id": 1758880111422,
+        "type": "text",
+        "label": "Image Size",
+        "options": [],
+        "value": ""
+      },
+      {
+        "id": 1758880119767,
+        "type": "text",
+        "label": "Overlap",
+        "options": [],
+        "value": ""
       }
-    ],
-    "color": "#ffffff"
+    ]
   },
   {
-    "id": "custom_1758870441912",
+    "id": "custom_1758887208600",
     "type": "customNode",
-    "label": "Tracker",
+    "label": "ImageProcessing",
     "custom": true,
     "color": "#ffffff",
-    "fields": []
+    "fields": [
+      {
+        "id": 1758887198072,
+        "type": "text",
+        "label": "logic",
+        "options": [],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_1758887736670",
+    "type": "customNode",
+    "label": "Output merge ",
+    "custom": true,
+    "color": "#e9a5a5",
+    "fields": [
+      {
+        "id": 1758887706900,
+        "type": "dropdown",
+        "label": "Result Object with detections object",
+        "options": [
+          "detection ",
+          " platedetection"
+        ],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_1758887893712",
+    "type": "customNode",
+    "label": "Output Screen",
+    "custom": true,
+    "color": "#e9a5a5",
+    "fields": [
+      {
+        "id": 1758887828060,
+        "type": "checkbox",
+        "label": "features",
+        "options": [
+          "OK/NG count ",
+          " OK/NG graph  ",
+          "inference image"
+        ],
+        "value": []
+      }
+    ]
+  },
+  {
+    "id": "custom_1758888118278",
+    "type": "customNode",
+    "label": "DB entry",
+    "custom": true,
+    "color": "#a5e9ad",
+    "fields": [
+      {
+        "id": 1758887828060,
+        "type": "checkbox",
+        "label": "Database ",
+        "options": [
+          "MongoDB ",
+          " SQLlite ",
+          "MYSQL  "
+        ],
+        "value": []
+      },
+      {
+        "id": 1758888046034,
+        "type": "radio",
+        "label": "Type",
+        "options": [
+          "LocalDB ",
+          " RemoteDB"
+        ],
+        "value": ""
+      }
+    ]
   }
 ]

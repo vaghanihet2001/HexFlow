@@ -1,142 +1,77 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-export default function NodeDetailsPanel({ node, updateNode, deleteNode, onClosePanel }) {
+export default function NodeDetailsPanel({ node, updateNodeField, updateNodeData, deleteNode, onClosePanel }) {
   if (!node)
     return (
-      <div className="bg-light border-start p-3" style={{ width: "250px" }}>
-        <h5 className="text-muted">Select a node</h5>
+      <div className="bg-light border-start d-flex flex-column" style={{ width: "250px", height: "100vh" }}>
+        <div className="p-3 border-bottom d-flex justify-content-between align-items-center">
+          <h5 className="text-muted mb-0">Select a node</h5>
+        </div>
       </div>
     );
-
-  const handleFieldChange = (fieldId, key, value) => {
-    const updatedFields = node.data.fields.map((f) =>
-      f.id === fieldId ? { ...f, [key]: value } : f
-    );
-    updateNode({ ...node, data: { ...node.data, fields: updatedFields } });
-  };
-
-  const handleChange = (key, value) => {
-    updateNode({ ...node, data: { ...node.data, [key]: value } });
-  };
 
   return (
-    <div
-      className="bg-light border-start p-3 d-flex flex-column"
-      style={{ width: "250px", height: "100vh", overflowY: "auto", position: "relative" }}
-    >
-      {/* Close Button */}
-      <button
-        style={{
-          position: "absolute",
-          top: "10px",
-          right: "10px",
-          border: "none",
-          background: "transparent",
-          fontSize: "18px",
-          cursor: "pointer",
-        }}
-        onClick={onClosePanel}
-      >
-        ×
-      </button>
-
-      <h5 className="mb-3">Node Details</h5>
-
-      {/* Node Label */}
-      <div className="mb-3">
-        <label className="form-label">Label:</label>
-        <input
-          type="text"
-          className="form-control"
-          value={node.data.label}
-          onChange={(e) => handleChange("label", e.target.value)}
-        />
+    <div className="bg-light border-start d-flex flex-column" style={{ width: "250px", height: "100vh" }}>
+      {/* Top Header */}
+      <div className="flex-shrink-0 p-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 className="mb-0">Node Details</h5>
+        <button style={{ border: "none", background: "transparent", fontSize: "18px", cursor: "pointer" }} onClick={onClosePanel}>×</button>
       </div>
 
-      {/* Custom Fields */}
-      {node.data.fields?.map((field) => (
-        <div key={field.id} className="mb-3 border rounded p-2 bg-white">
-          <label className="form-label">{field.label}</label>
-
-          {/* Text Input */}
-          {field.type === "text" && (
-            <input
-              type="text"
-              className="form-control"
-              value={field.value || ""}
-              onChange={(e) =>
-                handleFieldChange(field.id, "value", e.target.value)
-              }
-            />
-          )}
-
-          {/* Dropdown */}
-          {field.type === "dropdown" && (
-            <select
-              className="form-select"
-              value={field.value || ""}
-              onChange={(e) =>
-                handleFieldChange(field.id, "value", e.target.value)
-              }
-            >
-              {field.options?.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {/* Radio */}
-          {field.type === "radio" &&
-            field.options?.map((opt) => (
-              <div className="form-check" key={opt}>
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name={field.id}
-                  value={opt}
-                  checked={field.value === opt}
-                  onChange={() =>
-                    handleFieldChange(field.id, "value", opt)
-                  }
-                />
-                <label className="form-check-label">{opt}</label>
-              </div>
-            ))}
-
-          {/* Checkbox */}
-          {field.type === "checkbox" &&
-            field.options?.map((opt) => (
-              <div className="form-check" key={opt}>
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  checked={field.value?.includes(opt)}
-                  onChange={(e) => {
-                    let newValue = field.value || [];
-                    if (e.target.checked) {
-                      newValue = [...newValue, opt];
-                    } else {
-                      newValue = newValue.filter((v) => v !== opt);
-                    }
-                    handleFieldChange(field.id, "value", newValue);
-                  }}
-                />
-                <label className="form-check-label">{opt}</label>
-              </div>
-            ))}
+      {/* Scrollable Middle */}
+      <div className="flex-grow-1 overflow-auto p-3" style={{ minHeight: 0 }}>
+        {/* Node Label */}
+        <div className="mb-3">
+          <label className="form-label">Label:</label>
+          <input type="text" className="form-control" value={node.data.label} onChange={(e) => updateNodeData(node.id, "label", e.target.value)} />
         </div>
-      ))}
 
-      {/* Delete Node Button */}
-      <button
-        className="btn btn-danger mt-auto"
-        onClick={() => deleteNode(node.id)}
-      >
-        Delete Node
-      </button>
+        {/* Custom Fields */}
+        {node.data.fields?.map((field) => (
+          <div key={field.id} className="mb-3 border rounded p-2 bg-white">
+            <label className="form-label">{field.label}</label>
+
+            {field.type === "text" && (
+              <input type="text" className="form-control" value={field.value || ""} onChange={(e) => updateNodeField(node.id, field.id, "value", e.target.value)} />
+            )}
+
+            {field.type === "dropdown" && (
+              <select className="form-select" value={field.value || ""} onChange={(e) => updateNodeField(node.id, field.id, "value", e.target.value)}>
+                {field.options?.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            )}
+
+            {field.type === "radio" &&
+              field.options?.map((opt) => (
+                <div className="form-check" key={opt}>
+                  <input className="form-check-input" type="radio" name={field.id} value={opt} checked={field.value === opt} onChange={() => updateNodeField(node.id, field.id, "value", opt)} />
+                  <label className="form-check-label">{opt}</label>
+                </div>
+              ))}
+
+            {field.type === "checkbox" &&
+              field.options?.map((opt) => (
+                <div className="form-check" key={opt}>
+                  <input className="form-check-input" type="checkbox" checked={field.value?.includes(opt)} onChange={(e) => {
+                    let newValue = field.value || [];
+                    if (e.target.checked) newValue = [...newValue, opt];
+                    else newValue = newValue.filter((v) => v !== opt);
+                    updateNodeField(node.id, field.id, "value", newValue);
+                  }} />
+                  <label className="form-check-label">{opt}</label>
+                </div>
+              ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom Delete Button */}
+      <div className="flex-shrink-0 p-3 border-top" style={{ position: "sticky", bottom: 0, backgroundColor: "#f8f9fa", zIndex: 10 }}>
+        <button className="btn btn-danger w-100" onClick={() => deleteNode(node.id)}>Delete Node</button>
+      </div>
     </div>
   );
 }

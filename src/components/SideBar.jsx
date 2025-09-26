@@ -7,9 +7,8 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
   const [customNodes, setCustomNodes] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editNode, setEditNode] = useState(null);
-  const [isCollapsed, setIsCollapsed] = useState(false); // new
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Load nodes from server
   useEffect(() => {
     const fetchNodes = async () => {
       try {
@@ -80,12 +79,19 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
       className="d-flex flex-column bg-light border-end"
       style={{ width: isCollapsed ? "50px" : "280px", height: "100vh", transition: "width 0.3s" }}
     >
-      
-
-      {/* Node List */}
+      {/* Top Sticky Section */}
       {!isCollapsed && (
-        <div className="flex-grow-1 overflow-auto p-3">
-          <h5>Node Palette</h5>
+        <div className="flex-shrink-0 px-3 pt-2 pb-1 border-bottom" style={{ position: "sticky", top: 0, backgroundColor: "#f8f9fa", zIndex: 10 }}>
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <h5 className="mb-0">Node Palette</h5>
+            <Button
+              size="sm"
+              variant="outline-secondary"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+            >
+              ⬅
+            </Button>
+          </div>
           <input
             type="text"
             className="form-control mb-2"
@@ -93,7 +99,12 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
+      )}
 
+      {/* Middle Scrollable Node List */}
+      {!isCollapsed && (
+        <div className="flex-grow-1 overflow-auto px-3" style={{ paddingBottom: "100px" }}>
           <div className="d-flex flex-column gap-2">
             {filteredNodes.map((node, idx) => (
               <div key={idx} className="d-flex justify-content-between align-items-center">
@@ -133,20 +144,9 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
         </div>
       )}
 
-      {/* Collapse / Expand Button */}
-      <div className="p-2 border-bottom d-flex justify-content-center">
-        <Button
-          size="sm"
-          variant="outline-secondary"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? "➤" : "⬅"}
-        </Button>
-      </div>
-      
-      {/* Bottom Buttons */}
+      {/* Bottom Sticky Buttons */}
       {!isCollapsed && (
-        <div className="p-3 border-top">
+        <div className="flex-shrink-0 p-3 border-top" style={{ position: "sticky", bottom: 0, backgroundColor: "#f8f9fa", zIndex: 10 }}>
           <Button
             variant="primary"
             className="w-100 mb-2"
@@ -163,6 +163,19 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
             onClick={handleReset}
           >
             Reset Nodes
+          </Button>
+        </div>
+      )}
+
+      {/* Collapse Button (when collapsed) */}
+      {isCollapsed && (
+        <div className="p-2 border-bottom d-flex justify-content-center flex-shrink-0">
+          <Button
+            size="sm"
+            variant="outline-secondary"
+            onClick={() => setIsCollapsed(false)}
+          >
+            ➤
           </Button>
         </div>
       )}
