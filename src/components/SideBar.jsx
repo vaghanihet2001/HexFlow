@@ -67,6 +67,7 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
     }
   };
 
+  // Merge default and custom nodes
   const mergedNodesMap = new Map();
   availableNodes.forEach((n) => mergedNodesMap.set(n.id, n));
   customNodes.forEach((n) => mergedNodesMap.set(n.id, n));
@@ -84,13 +85,7 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
         <div className="flex-shrink-0 px-3 pt-2 pb-1 border-bottom" style={{ position: "sticky", top: 0, backgroundColor: "#f8f9fa", zIndex: 10 }}>
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="mb-0">Node Palette</h5>
-            <Button
-              size="sm"
-              variant="outline-secondary"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-            >
-              ⬅
-            </Button>
+            <Button size="sm" variant="outline-secondary" onClick={() => setIsCollapsed(!isCollapsed)}>⬅</Button>
           </div>
           <input
             type="text"
@@ -111,9 +106,20 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
                 <Button
                   variant="outline-secondary"
                   size="sm"
-                  className="flex-grow-1 me-1"
+                  className="flex-grow-1 me-1 d-flex align-items-center"
                   onClick={() => onAddNode(node)}
                 >
+                  {/* Colored indicator */}
+                  <span
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      backgroundColor: node.color || "#aaa",
+                      display: "inline-block",
+                      marginRight: "8px",
+                      borderRadius: "3px",
+                    }}
+                  />
                   {node.label}
                 </Button>
 
@@ -170,13 +176,7 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
       {/* Collapse Button (when collapsed) */}
       {isCollapsed && (
         <div className="p-2 border-bottom d-flex justify-content-center flex-shrink-0">
-          <Button
-            size="sm"
-            variant="outline-secondary"
-            onClick={() => setIsCollapsed(false)}
-          >
-            ➤
-          </Button>
+          <Button size="sm" variant="outline-secondary" onClick={() => setIsCollapsed(false)}>➤</Button>
         </div>
       )}
 
