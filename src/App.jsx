@@ -21,6 +21,7 @@ export default function App() {
   const [allNodes, setAllNodes] = useState(availableNodes);
   const [history, setHistory] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const [copiedNodes, setCopiedNodes] = useState([]);
   const toolbarHeight = 50;
 
   // --- Persistence ---
@@ -42,7 +43,14 @@ export default function App() {
     setRedoStack([]);
   };
 
-  const { addNode, onConnect, deleteNode, deleteEdge } = useFlowHandlers(nodes, setNodes, edges, setEdges, pushToHistory);
+  // --- Flow Handlers ---
+  const { addNode, onConnect, deleteNode, deleteEdge } = useFlowHandlers(
+    nodes,
+    setNodes,
+    edges,
+    setEdges,
+    pushToHistory
+  );
 
   const updateNodeField = (nodeId, fieldId, key, value) => {
     setNodes((nds) =>
@@ -62,20 +70,40 @@ export default function App() {
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
 
-  // Keyboard shortcuts
+  // --- Keyboard shortcuts: undo/redo, delete, copy/paste ---
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.ctrlKey && e.key === "z" && !e.shiftKey) undo();
-      else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "z") redo();
-      else if (e.key === "Delete") {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && selectedNodeId) {
+        e.preventDefault();
+        const nodeToCopy = nodes.find((n) => n.id === selectedNodeId);
+        if (nodeToCopy) setCopiedNodes([nodeToCopy]);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v" && copiedNodes.length) {
+        e.preventDefault();
+        const newNodes = copiedNodes.map((node) => ({
+          ...node,
+          id: `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          position: { x: node.position.x + 20, y: node.position.y + 20 },
+          data: { ...node.data, instanceId: Date.now() + Math.random() },
+        }));
+        pushToHistory(nodes, edges);
+        setNodes((nds) => [...nds, ...newNodes]);
+        setSelectedNodeId(newNodes[0].id);
+      } else if (e.ctrlKey && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        redo();
+      } else if (e.key === "Delete") {
         if (selectedNodeId) deleteNode(selectedNodeId);
         else if (selectedEdgeId) deleteEdge(selectedEdgeId);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedNodeId, selectedEdgeId, nodes, edges, history, redoStack]);
+  }, [selectedNodeId, selectedEdgeId, nodes, edges, history, redoStack, copiedNodes]);
 
+  // --- Undo / Redo ---
   const undo = () => {
     if (!history.length) return;
     const prev = history[history.length - 1];
@@ -99,19 +127,27 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw" }} onClick={() => setSelectedEdgeId(null)}>
+    <div
+      style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw" }}
+      onClick={() => setSelectedEdgeId(null)}
+    >
       <div style={{ height: `${toolbarHeight}px`, flexShrink: 0 }}>
         <Toolbar nodes={nodes} edges={edges} setNodes={setNodes} setEdges={setEdges} />
       </div>
 
       <div style={{ display: "flex", flexGrow: 1, height: `calc(100vh - ${toolbarHeight}px)`, overflow: "hidden" }}>
         <div style={{ height: "100%", overflowY: "auto", flexShrink: 0 }}>
-          <Sidebar availableNodes={allNodes} onAddNode={addNode} onSaveCustomNode={(node) => {
-            setAllNodes((prev) => {
-              const exists = prev.find((n) => n.id === node.id);
-              return exists ? prev.map((n) => (n.id === node.id ? node : n)) : [...prev, node];
-            });
-          }} onDeleteCustomNode={(nodeId) => setAllNodes((prev) => prev.filter((n) => n.id !== nodeId))} />
+          <Sidebar
+            availableNodes={allNodes}
+            onAddNode={addNode}
+            onSaveCustomNode={(node) => {
+              setAllNodes((prev) => {
+                const exists = prev.find((n) => n.id === node.id);
+                return exists ? prev.map((n) => (n.id === node.id ? node : n)) : [...prev, node];
+              });
+            }}
+            onDeleteCustomNode={(nodeId) => setAllNodes((prev) => prev.filter((n) => n.id !== nodeId))}
+          />
         </div>
 
         <div style={{ flexGrow: 1, border: "1px solid #ccc", height: "100%" }}>
@@ -129,11 +165,10 @@ export default function App() {
               setSelectedNodeId(selNodes[0]?.id || null);
               setSelectedEdgeId(selEdges[0]?.id || null);
             }}
-            minZoom={0.1}   // allows zooming out further
-            maxZoom={2}     // limits maximum zoom in
-            zoomOnScroll={true}  // enable zooming with scroll
-            zoomOnPinch={true}   // enable zooming with trackpad pinch
-
+            minZoom={0.1}   // allow zooming out further
+            maxZoom={2}     // limit zoom in
+            zoomOnScroll={true}
+            zoomOnPinch={true}
             fitView
           >
             <MiniMap />
