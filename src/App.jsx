@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useCallback, useState } from "react";
 import ReactFlow, {
   addEdge,
@@ -16,34 +15,54 @@ import { componentTypes } from "./components";
 const Sidebar = componentTypes.sideBar;
 const NodeDetailsPanel = componentTypes.nodeDetailsPanel;
 
-let id = 1;
+let idCounter = 1;
 
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [showNodeDetails, setShowNodeDetails] = useState(true);
   const [allNodes, setAllNodes] = useState(availableNodes);
 
-  const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), []);
-  const onNodeClick = (event, node) => setSelectedNode(node);
+  const onConnect = useCallback(
+    (params) => setEdges((eds) => addEdge(params, eds)),
+    []
+  );
+
+  const onNodeClick = (event, node) => {
+    setSelectedNode(node);
+    setShowNodeDetails(true); // show panel when selecting a node
+  };
 
   const updateNode = (updatedNode) => {
-    setNodes((nds) => nds.map((n) => (n.id === updatedNode.id ? updatedNode : n)));
+    setNodes((nds) =>
+      nds.map((n) => (n.id === updatedNode.id ? updatedNode : n))
+    );
     setSelectedNode(updatedNode);
   };
 
   const deleteNode = (nodeId) => {
     setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-    setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+    setEdges((eds) =>
+      eds.filter((e) => e.source !== nodeId && e.target !== nodeId)
+    );
     if (selectedNode?.id === nodeId) setSelectedNode(null);
   };
 
   const addNode = (nodeInfo) => {
     const newNode = {
-      id: `${id++}`,
+      id: `${idCounter++}`,
       type: nodeInfo.type,
       position: { x: Math.random() * 400, y: Math.random() * 400 },
-      data: nodeInfo,
+      data: {
+        ...nodeInfo,
+        instanceId: Date.now() + Math.random(),
+        updateNode,
+        fields: nodeInfo.fields?.map((f) => ({
+          ...f,
+          value: f.value || (f.type === "checkbox" ? [] : ""),
+        })),
+      },
     };
     setNodes((nds) => [...nds, newNode]);
   };
@@ -88,7 +107,14 @@ export default function App() {
         </ReactFlow>
       </div>
 
-      <NodeDetailsPanel node={selectedNode} updateNode={updateNode} deleteNode={deleteNode} />
+      {showNodeDetails && selectedNode && (
+        <NodeDetailsPanel
+          node={selectedNode}
+          updateNode={updateNode}
+          deleteNode={deleteNode}
+          onClosePanel={() => setShowNodeDetails(false)}
+        />
+      )}
     </div>
   );
 }

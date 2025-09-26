@@ -1,7 +1,7 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-export default function NodeDetailsPanel({ node, updateNode, deleteNode }) {
+export default function NodeDetailsPanel({ node, updateNode, deleteNode, onClosePanel }) {
   if (!node)
     return (
       <div className="bg-light border-start p-3" style={{ width: "250px" }}>
@@ -23,8 +23,24 @@ export default function NodeDetailsPanel({ node, updateNode, deleteNode }) {
   return (
     <div
       className="bg-light border-start p-3 d-flex flex-column"
-      style={{ width: "250px", height: "100vh", overflowY: "auto" }}
+      style={{ width: "250px", height: "100vh", overflowY: "auto", position: "relative" }}
     >
+      {/* Close Button */}
+      <button
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          border: "none",
+          background: "transparent",
+          fontSize: "18px",
+          cursor: "pointer",
+        }}
+        onClick={onClosePanel}
+      >
+        ×
+      </button>
+
       <h5 className="mb-3">Node Details</h5>
 
       {/* Node Label */}
@@ -38,26 +54,12 @@ export default function NodeDetailsPanel({ node, updateNode, deleteNode }) {
         />
       </div>
 
-      {/* Node Options (if any) */}
-      {node.data.options && (
-        <div className="mb-3">
-          <label className="form-label">Options (comma separated):</label>
-          <input
-            type="text"
-            className="form-control"
-            value={node.data.options.join(",")}
-            onChange={(e) =>
-              handleChange("options", e.target.value.split(","))
-            }
-          />
-        </div>
-      )}
-
       {/* Custom Fields */}
       {node.data.fields?.map((field) => (
         <div key={field.id} className="mb-3 border rounded p-2 bg-white">
           <label className="form-label">{field.label}</label>
 
+          {/* Text Input */}
           {field.type === "text" && (
             <input
               type="text"
@@ -69,6 +71,7 @@ export default function NodeDetailsPanel({ node, updateNode, deleteNode }) {
             />
           )}
 
+          {/* Dropdown */}
           {field.type === "dropdown" && (
             <select
               className="form-select"
@@ -85,6 +88,7 @@ export default function NodeDetailsPanel({ node, updateNode, deleteNode }) {
             </select>
           )}
 
+          {/* Radio */}
           {field.type === "radio" &&
             field.options?.map((opt) => (
               <div className="form-check" key={opt}>
@@ -102,6 +106,7 @@ export default function NodeDetailsPanel({ node, updateNode, deleteNode }) {
               </div>
             ))}
 
+          {/* Checkbox */}
           {field.type === "checkbox" &&
             field.options?.map((opt) => (
               <div className="form-check" key={opt}>
@@ -125,7 +130,7 @@ export default function NodeDetailsPanel({ node, updateNode, deleteNode }) {
         </div>
       ))}
 
-      {/* Delete Node Button at Bottom */}
+      {/* Delete Node Button */}
       <button
         className="btn btn-danger mt-auto"
         onClick={() => deleteNode(node.id)}

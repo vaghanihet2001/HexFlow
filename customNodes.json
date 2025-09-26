@@ -1,0 +1,93 @@
+[
+  {
+    "id": "custom_1758865828114",
+    "type": "customNode",
+    "label": "Model",
+    "custom": true,
+    "color": "#b2f0bd",
+    "fields": [
+      {
+        "id": 1758865772294,
+        "type": "dropdown",
+        "label": "Task",
+        "options": [
+          "OBB ",
+          " DETECT ",
+          " SEGMENT ",
+          " CLASSIFY ",
+          " OCR",
+          " OK"
+        ],
+        "value": ""
+      },
+      {
+        "id": 1758865812944,
+        "type": "radio",
+        "label": ".ext",
+        "options": [
+          ".pt ",
+          " .engine ",
+          " .onnx"
+        ],
+        "value": ""
+      },
+      {
+        "id": 1758867643499,
+        "type": "checkbox",
+        "label": "classes ",
+        "options": [
+          "plate ",
+          " hole"
+        ],
+        "value": []
+      }
+    ]
+  },
+  {
+    "id": "custom_1758867911345",
+    "type": "customNode",
+    "label": "Camera",
+    "custom": true,
+    "color": "#befefd",
+    "fields": [
+      {
+        "id": 1758867883600,
+        "type": "dropdown",
+        "label": "Type",
+        "options": [
+          "USB ",
+          "GIGI ",
+          "RTSP"
+        ],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_1758868234538",
+    "type": "customNode",
+    "label": "Engine",
+    "custom": true,
+    "fields": [
+      {
+        "id": 1758868197392,
+        "type": "radio",
+        "label": ".ext",
+        "options": [
+          ".pt",
+          ".engine",
+          ".onnx"
+        ]
+      }
+    ],
+    "color": "#ffffff"
+  },
+  {
+    "id": "custom_1758870441912",
+    "type": "customNode",
+    "label": "Tracker",
+    "custom": true,
+    "color": "#ffffff",
+    "fields": []
+  }
+]

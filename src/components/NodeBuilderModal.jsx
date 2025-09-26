@@ -6,7 +6,6 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
   const [fields, setFields] = useState([]);
   const [color, setColor] = useState("#ffffff"); // default white
 
-
   // Load node data into modal when editing
   useEffect(() => {
     if (editingNode) {
@@ -21,7 +20,16 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
   }, [editingNode]);
 
   const addField = (type) => {
-    setFields([...fields, { id: Date.now(), type, label: `${type} field`, options: [] }]);
+    setFields([
+      ...fields,
+      {
+        id: Date.now(),
+        type,
+        label: `${type} field`,
+        options: [],
+        value: type === "checkbox" ? [] : "",
+      },
+    ]);
   };
 
   const updateField = (id, key, value) => {
@@ -38,8 +46,11 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
       type: editingNode?.type || "customNode",
       label,
       custom: true,
-      fields,
-      color, // save color
+      color,
+      fields: fields.map((f) => ({
+        ...f,
+        value: f.type === "checkbox" ? f.value || [] : f.value || "",
+      })),
     };
     onSave(newNode);
   };
@@ -61,7 +72,7 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
           />
         </Form.Group>
 
-        {/* Node color */}
+        {/* Node Color */}
         <Form.Group className="mb-3">
           <Form.Label>Node Color</Form.Label>
           <Form.Control
@@ -95,7 +106,10 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
               />
             </Form.Group>
 
-            {(field.type === "dropdown" || field.type === "radio") && (
+            {/* Show options input for dropdown, radio, and checkbox */}
+            {(field.type === "dropdown" ||
+              field.type === "radio" ||
+              field.type === "checkbox") && (
               <Form.Group>
                 <Form.Label>Options (comma separated)</Form.Label>
                 <Form.Control

@@ -1,4 +1,3 @@
-// src/components/Sidebar.jsx
 import React, { useState, useEffect } from "react";
 import NodeBuilderModal from "./NodeBuilderModal";
 import { Button } from "react-bootstrap";
@@ -8,40 +7,65 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
   const [customNodes, setCustomNodes] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editNode, setEditNode] = useState(null);
+  const [isCollapsed, setIsCollapsed] = useState(false); // new
 
+  // Load nodes from server
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("customNodes") || "[]");
-    setCustomNodes(saved);
+    const fetchNodes = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/nodes");
+        const data = await res.json();
+        setCustomNodes(data);
+      } catch (err) {
+        console.error("Failed to fetch custom nodes:", err);
+      }
+    };
+    fetchNodes();
   }, []);
 
-  const handleSaveCustomNode = (node) => {
-    let updated;
-    if (editNode) {
-      updated = customNodes.map((n) => (n.id === node.id ? node : n));
-    } else {
-      const nodeWithId = { ...node, id: node.id || `custom_${Date.now()}` };
-      updated = [...customNodes, nodeWithId];
+  const handleSaveCustomNode = async (node) => {
+    const nodeWithId = { ...node, id: node.id || `custom_${Date.now()}` };
+    try {
+      await fetch("http://localhost:5000/nodes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nodeWithId),
+      });
+      const res = await fetch("http://localhost:5000/nodes");
+      const data = await res.json();
+      setCustomNodes(data);
+      onSaveCustomNode(nodeWithId);
+      setShowModal(false);
+    } catch (err) {
+      console.error("Failed to save custom node:", err);
     }
-    setCustomNodes(updated);
-    localStorage.setItem("customNodes", JSON.stringify(updated));
-    onSaveCustomNode(node);
-    setShowModal(false);
   };
 
-  const handleDelete = (nodeId) => {
+  const handleDelete = async (nodeId) => {
     if (!window.confirm("Are you sure you want to delete this custom node?")) return;
-
-    const updated = customNodes.filter((n) => n.id !== nodeId);
-    setCustomNodes(updated);
-    localStorage.setItem("customNodes", JSON.stringify(updated));
-    onDeleteCustomNode(nodeId);
+    try {
+      await fetch(`http://localhost:5000/nodes/${nodeId}`, { method: "DELETE" });
+      const res = await fetch("http://localhost:5000/nodes");
+      const data = await res.json();
+      setCustomNodes(data);
+      onDeleteCustomNode(nodeId);
+    } catch (err) {
+      console.error("Failed to delete custom node:", err);
+    }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (!window.confirm("Are you sure you want to reset all custom nodes?")) return;
-
-    setCustomNodes([]);
-    localStorage.removeItem("customNodes");
+    try {
+      const allNodes = await fetch("http://localhost:5000/nodes");
+      const data = await allNodes.json();
+      for (const node of data) {
+        await fetch(`http://localhost:5000/nodes/${node.id}`, { method: "DELETE" });
+      }
+      setCustomNodes([]);
+    } catch (err) {
+      console.error("Failed to reset custom nodes:", err);
+    }
   };
 
   const mergedNodesMap = new Map();
@@ -52,76 +76,96 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
   );
 
   return (
-    <div className="d-flex flex-column bg-light border-end" style={{ width: "280px", height: "100vh" }}>
+    <div
+      className="d-flex flex-column bg-light border-end"
+      style={{ width: isCollapsed ? "50px" : "280px", height: "100vh", transition: "width 0.3s" }}
+    >
+      
+
       {/* Node List */}
-      <div className="flex-grow-1 overflow-auto p-3">
-        <h5>Node Palette</h5>
-        <input
-          type="text"
-          className="form-control mb-2"
-          placeholder="Search nodes..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      {!isCollapsed && (
+        <div className="flex-grow-1 overflow-auto p-3">
+          <h5>Node Palette</h5>
+          <input
+            type="text"
+            className="form-control mb-2"
+            placeholder="Search nodes..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-        <div className="d-flex flex-column gap-2">
-          {filteredNodes.map((node, idx) => (
-            <div key={idx} className="d-flex justify-content-between align-items-center">
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                className="flex-grow-1 me-1"
-                onClick={() => onAddNode(node)}
-              >
-                {node.label}
-              </Button>
+          <div className="d-flex flex-column gap-2">
+            {filteredNodes.map((node, idx) => (
+              <div key={idx} className="d-flex justify-content-between align-items-center">
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  className="flex-grow-1 me-1"
+                  onClick={() => onAddNode(node)}
+                >
+                  {node.label}
+                </Button>
 
-              {node.id?.startsWith("custom_") && (
-                <>
-                  <Button
-                    variant="outline-warning"
-                    size="sm"
-                    onClick={() => {
-                      setEditNode(node);
-                      setShowModal(true);
-                    }}
-                  >
-                    ✎
-                  </Button>
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={() => handleDelete(node.id)}
-                  >
-                    🗑
-                  </Button>
-                </>
-              )}
-            </div>
-          ))}
+                {node.id?.startsWith("custom_") && (
+                  <>
+                    <Button
+                      variant="outline-warning"
+                      size="sm"
+                      onClick={() => {
+                        setEditNode(node);
+                        setShowModal(true);
+                      }}
+                    >
+                      ✎
+                    </Button>
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={() => handleDelete(node.id)}
+                    >
+                      🗑
+                    </Button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Bottom Buttons */}
-      <div className="p-3 border-top">
+      {/* Collapse / Expand Button */}
+      <div className="p-2 border-bottom d-flex justify-content-center">
         <Button
-          variant="primary"
-          className="w-100 mb-2"
-          onClick={() => {
-            setEditNode(null);
-            setShowModal(true);
-          }}
+          size="sm"
+          variant="outline-secondary"
+          onClick={() => setIsCollapsed(!isCollapsed)}
         >
-          + Create Node
-        </Button>
-        <Button
-          variant="danger"
-          className="w-100"
-          onClick={handleReset}
-        >
-          Reset Nodes
+          {isCollapsed ? "➤" : "⬅"}
         </Button>
       </div>
+      
+      {/* Bottom Buttons */}
+      {!isCollapsed && (
+        <div className="p-3 border-top">
+          <Button
+            variant="primary"
+            className="w-100 mb-2"
+            onClick={() => {
+              setEditNode(null);
+              setShowModal(true);
+            }}
+          >
+            + Create Node
+          </Button>
+          <Button
+            variant="danger"
+            className="w-100"
+            onClick={handleReset}
+          >
+            Reset Nodes
+          </Button>
+        </div>
+      )}
 
       {/* Node Builder Modal */}
       <NodeBuilderModal
