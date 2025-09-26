@@ -129,6 +129,11 @@ export default function App() {
               setSelectedNodeId(selNodes[0]?.id || null);
               setSelectedEdgeId(selEdges[0]?.id || null);
             }}
+            minZoom={0.1}   // allows zooming out further
+            maxZoom={2}     // limits maximum zoom in
+            zoomOnScroll={true}  // enable zooming with scroll
+            zoomOnPinch={true}   // enable zooming with trackpad pinch
+
             fitView
           >
             <MiniMap />
