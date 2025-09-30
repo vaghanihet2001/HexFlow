@@ -81,7 +81,7 @@
         "type": "dropdown",
         "label": "Protocol",
         "options": [
-          "GIGI ",
+          "GIGE ",
           " USB",
           " RTSP"
         ],
@@ -242,6 +242,25 @@
           " Letter Boxing"
         ],
         "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_1759235503259",
+    "type": "customNode",
+    "label": "ScoreCard",
+    "custom": true,
+    "color": "#ffffff",
+    "fields": [
+      {
+        "id": 1759235469193,
+        "type": "checkbox",
+        "label": "IsOn",
+        "options": [
+          "on",
+          "off"
+        ],
+        "value": []
       }
     ]
   }

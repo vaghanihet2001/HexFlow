@@ -12,6 +12,7 @@ import "reactflow/dist/style.css";
 import { nodeTypes, availableNodes } from "./nodes";
 import { componentTypes } from "./components";
 import CustomEdge from "./components/CustomEdge";
+import EdgeDetailsPanel from "./components/EdgeDetailsPanel";
 import { useFlowHandlers } from "./hooks/useFlowHandlers";
 
 const Sidebar = componentTypes.sideBar;
@@ -23,7 +24,7 @@ export default function App() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState(null);
-  const [showNodeDetails, setShowNodeDetails] = useState(true); // panel visibility toggle
+  const [showNodeDetails, setShowNodeDetails] = useState(true);
   const [allNodes, setAllNodes] = useState(availableNodes);
   const [history, setHistory] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
@@ -62,7 +63,15 @@ export default function App() {
     setNodes((nds) =>
       nds.map((n) =>
         n.id === nodeId
-          ? { ...n, data: { ...n.data, fields: n.data.fields?.map((f) => (f.id === fieldId ? { ...f, [key]: value } : f)) } }
+          ? {
+              ...n,
+              data: {
+                ...n.data,
+                fields: n.data.fields?.map((f) =>
+                  f.id === fieldId ? { ...f, [key]: value } : f
+                ),
+              },
+            }
           : n
       )
     );
@@ -70,13 +79,33 @@ export default function App() {
 
   const updateNodeData = (nodeId, key, value) => {
     setNodes((nds) =>
-      nds.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, [key]: value } } : n))
+      nds.map((n) =>
+        n.id === nodeId ? { ...n, data: { ...n.data, [key]: value } } : n
+      )
     );
   };
 
-  const selectedNode = nodes.find((n) => n.id === selectedNodeId);
+  const updateEdgeData = (edgeId, key, value) => {
+    setEdges((eds) =>
+      eds.map((e) =>
+        e.id === edgeId ? { ...e, data: { ...e.data, [key]: value } } : e
+      )
+    );
+  };
 
-  // --- Keyboard shortcuts: undo/redo, delete, copy/paste ---
+  const updateEdgeType = (edgeId, newType) => {
+    setEdges((eds) =>
+      eds.map((e) =>
+        e.id === edgeId ? { ...e, type: "custom", data: { ...e.data, type: newType } } : e
+      )
+    );
+  };
+
+
+  const selectedNode = nodes.find((n) => n.id === selectedNodeId);
+  const selectedEdge = edges.find((e) => e.id === selectedEdgeId);
+
+  // --- Keyboard shortcuts ---
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && selectedNodeId) {
@@ -132,7 +161,7 @@ export default function App() {
     setSelectedEdgeId(null);
   };
 
-  // --- File Load ---
+  // --- File load ---
   const handleFileLoad = (file) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -152,10 +181,7 @@ export default function App() {
   };
 
   return (
-    <div
-      style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw" }}
-      onClick={() => setSelectedEdgeId(null)}
-    >
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw" }} onClick={() => setSelectedEdgeId(null)}>
       <div style={{ height: `${toolbarHeight}px`, flexShrink: 0 }}>
         <Toolbar nodes={nodes} edges={edges} setNodes={setNodes} setEdges={setEdges} />
       </div>
@@ -184,17 +210,15 @@ export default function App() {
             onConnect={onConnect}
             nodeTypes={nodeTypes}
             edgeTypes={{ custom: CustomEdge }}
-            onNodeClick={(e, node) => {
-              setSelectedNodeId(node.id);
-              setShowNodeDetails(true); // ensure panel opens when node clicked
-            }}
-            onPaneClick={() => setShowNodeDetails(false)} // click on ground closes panel
+            onNodeClick={(e, node) => { setSelectedNodeId(node.id); setShowNodeDetails(true); }}
+            onEdgeClick={(e, edge) => { setSelectedEdgeId(edge.id); setSelectedNodeId(null); }}
+            onPaneClick={() => { setShowNodeDetails(false); setSelectedEdgeId(null); }}
             onSelectionChange={({ nodes: selNodes, edges: selEdges }) => {
               setSelectedNodeId(selNodes[0]?.id || null);
               setSelectedEdgeId(selEdges[0]?.id || null);
             }}
-            minZoom={0.1}   // allow zooming out further
-            maxZoom={2}     // limit zoom in
+            minZoom={0.1}
+            maxZoom={2}
             zoomOnScroll={true}
             zoomOnPinch={true}
             fitView
@@ -205,6 +229,7 @@ export default function App() {
           </ReactFlow>
         </div>
 
+        {/* Node Details Panel */}
         {showNodeDetails && selectedNode && (
           <NodeDetailsPanel
             node={selectedNode}
@@ -212,6 +237,17 @@ export default function App() {
             updateNodeData={updateNodeData}
             deleteNode={deleteNode}
             onClosePanel={() => setShowNodeDetails(false)}
+          />
+        )}
+
+        {/* Edge Details Panel */}
+        {selectedEdge && !selectedNode && (
+          <EdgeDetailsPanel
+            edge={selectedEdge}
+            updateEdgeData={updateEdgeData}
+            updateEdgeType={updateEdgeType}
+            deleteEdge={deleteEdge}
+            onClosePanel={() => setSelectedEdgeId(null)}
           />
         )}
       </div>
