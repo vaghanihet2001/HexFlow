@@ -61,7 +61,8 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
 
     document.body.appendChild(clone);
 
-    htmlToImage.toPng(clone, { width, height, style: { background: "white" } })
+    htmlToImage
+      .toPng(clone, { width, height, style: { background: "white" } })
       .then((dataUrl) => {
         const a = document.createElement("a");
         a.href = dataUrl;
@@ -77,10 +78,12 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
 
   return (
     <div className="d-flex align-items-center gap-2 p-2 border-bottom bg-light">
+      {/* File Menu */}
       <DropdownButton id="dropdown-file" title="File" variant="secondary" size="sm">
         <Dropdown.Item onClick={handleNew}>New</Dropdown.Item>
         <Dropdown.Item onClick={handleSave}>Save</Dropdown.Item>
         <Dropdown.Item onClick={() => fileInputRef.current.click()}>Load</Dropdown.Item>
+        <Dropdown.Item onClick={handleExportImage}>Export as Image</Dropdown.Item>
       </DropdownButton>
 
       {/* Hidden file input for loading */}
@@ -92,10 +95,20 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
         onChange={handleLoad}
       />
 
-      <Button size="sm" variant="secondary" onClick={handleNew}>New</Button>
-      <Button size="sm" variant="secondary" onClick={handleSave}>Save</Button>
-      <Button size="sm" variant="secondary" onClick={() => fileInputRef.current.click()}>Load</Button>
-      <Button size="sm" variant="secondary" onClick={handleExportImage}>Export as Image</Button>
+      {/* Shortcuts / Help Menu */}
+      <DropdownButton id="dropdown-help" title="Help / Shortcuts" variant="info" size="sm">
+        <Dropdown.Header>Keyboard Shortcuts</Dropdown.Header>
+        <Dropdown.Item disabled>Ctrl + C → Copy Node</Dropdown.Item>
+        <Dropdown.Item disabled>Ctrl + V → Paste Node</Dropdown.Item>
+        <Dropdown.Item disabled>Delete → Delete Node/Edge</Dropdown.Item>
+        <Dropdown.Item disabled>Ctrl + Z → Undo</Dropdown.Item>
+        <Dropdown.Item disabled>Ctrl + Shift + Z → Redo</Dropdown.Item>
+        <Dropdown.Divider />
+        <Dropdown.Header>Other Functions</Dropdown.Header>
+        <Dropdown.Item disabled>File → New / Save / Load / Export as Image</Dropdown.Item>
+        <Dropdown.Item disabled>Click Node → Show Node Details</Dropdown.Item>
+        <Dropdown.Item disabled>Click Edge → Select Edge</Dropdown.Item>
+      </DropdownButton>
     </div>
   );
 }

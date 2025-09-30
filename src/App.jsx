@@ -1,6 +1,12 @@
 // src/App.jsx
 import React, { useState, useEffect } from "react";
-import ReactFlow, { MiniMap, Controls, Background, useNodesState, useEdgesState } from "reactflow";
+import ReactFlow, {
+  MiniMap,
+  Controls,
+  Background,
+  useNodesState,
+  useEdgesState,
+} from "reactflow";
 import "reactflow/dist/style.css";
 
 import { nodeTypes, availableNodes } from "./nodes";
@@ -17,14 +23,14 @@ export default function App() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState(null);
-  const [showNodeDetails, setShowNodeDetails] = useState(true);
+  const [showNodeDetails, setShowNodeDetails] = useState(true); // panel visibility toggle
   const [allNodes, setAllNodes] = useState(availableNodes);
   const [history, setHistory] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const [copiedNodes, setCopiedNodes] = useState([]);
   const toolbarHeight = 50;
 
-  // --- Persistence ---
+  // --- Persistence: load from localStorage ---
   useEffect(() => {
     const saved = localStorage.getItem("flowState");
     if (saved) {
@@ -126,6 +132,25 @@ export default function App() {
     setSelectedEdgeId(null);
   };
 
+  // --- File Load ---
+  const handleFileLoad = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const { nodes: loadedNodes, edges: loadedEdges } = JSON.parse(e.target.result);
+        if (loadedNodes && loadedEdges) {
+          setNodes(loadedNodes);
+          setEdges(loadedEdges);
+          pushToHistory(loadedNodes, loadedEdges);
+        }
+      } catch (err) {
+        console.error("Invalid flow file:", err);
+        alert("Invalid flow JSON file");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div
       style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw" }}
@@ -159,8 +184,11 @@ export default function App() {
             onConnect={onConnect}
             nodeTypes={nodeTypes}
             edgeTypes={{ custom: CustomEdge }}
-            onNodeClick={(e, node) => setSelectedNodeId(node.id)}
-            onEdgeClick={(e, edge) => setSelectedEdgeId(edge.id)}
+            onNodeClick={(e, node) => {
+              setSelectedNodeId(node.id);
+              setShowNodeDetails(true); // ensure panel opens when node clicked
+            }}
+            onPaneClick={() => setShowNodeDetails(false)} // click on ground closes panel
             onSelectionChange={({ nodes: selNodes, edges: selEdges }) => {
               setSelectedNodeId(selNodes[0]?.id || null);
               setSelectedEdgeId(selEdges[0]?.id || null);
