@@ -70,8 +70,31 @@ export default function NodeDetailsPanel({
                 ))}
               </select>
             )}
+
+             {field.type === "radio" &&
+              field.options?.map((opt) => (
+                <div className="form-check" key={opt}>
+                  <input className="form-check-input" type="radio" name={field.id} value={opt} checked={field.value === opt} onChange={() => updateNodeField(node.id, field.id, "value", opt)} />
+                  <label className="form-check-label">{opt}</label>
+                </div>
+              ))}
+
+            {field.type === "checkbox" &&
+              field.options?.map((opt) => (
+                <div className="form-check" key={opt}>
+                  <input className="form-check-input" type="checkbox" checked={field.value?.includes(opt)} onChange={(e) => {
+                    let newValue = field.value || [];
+                    if (e.target.checked) newValue = [...newValue, opt];
+                    else newValue = newValue.filter((v) => v !== opt);
+                    updateNodeField(node.id, field.id, "value", newValue);
+                  }} />
+                  <label className="form-check-label">{opt}</label>
+                </div>
+              ))}
           </div>
         ))}
+        
+        
       </div>
 
       {/* Delete Button */}
