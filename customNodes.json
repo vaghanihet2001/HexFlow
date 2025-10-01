@@ -62,7 +62,7 @@
   {
     "id": "custom_1758879791125",
     "type": "customNode",
-    "label": "Camera",
+    "label": "Camera ",
     "custom": true,
     "color": "#878787",
     "fields": [
@@ -71,8 +71,10 @@
         "type": "dropdown",
         "label": "Type",
         "options": [
-          "Line Camera ",
-          " Area Camera "
+          "RTSP ",
+          " USB ",
+          "GIGEVision",
+          " CSI"
         ],
         "value": ""
       },
@@ -81,17 +83,12 @@
         "type": "dropdown",
         "label": "Protocol",
         "options": [
-          "GIGE ",
-          " USB",
-          " RTSP"
+          "OpenCV",
+          " FFMPEG",
+          " Gstreamer",
+          " Aravis",
+          " PiCamera"
         ],
-        "value": ""
-      },
-      {
-        "id": 1758879761235,
-        "type": "text",
-        "label": "Image Size",
-        "options": [],
         "value": ""
       }
     ]
