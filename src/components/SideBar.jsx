@@ -107,6 +107,13 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
             <h5 className="mb-0">Node Palette</h5>
             <Button size="sm" variant="outline-secondary" onClick={() => setIsCollapsed(!isCollapsed)}>⬅</Button>
           </div>
+          <style>
+            {`
+              .form-control::placeholder {
+                color: ${themeColors.placeholderText};
+              }
+            `}
+          </style>
           <Form.Control
             type="text"
             className="mb-2"
@@ -117,7 +124,6 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
             style={{
               backgroundColor: themeColors.inputBg,
               color: themeColors.text,
-              placeholderColor: themeColors.placeholderText,
               borderColor: themeColors.border,
             }}
           />
