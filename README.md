@@ -21,6 +21,7 @@ A visual graph editor built with **ReactFlow** and **React**, allowing you to cr
 - **Persistent state**: automatically saves your flow in `localStorage`
 - **Custom edge support** for advanced visual connections
 - **MiniMap, Controls, and Background** for easier navigation
+- **Theme** dark/ light mode added
 
 ## Project Setup
 
