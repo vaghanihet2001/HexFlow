@@ -1,11 +1,14 @@
+// src/components/Toolbar.jsx
 import React, { useRef } from "react";
 import { Button, Dropdown, DropdownButton } from "react-bootstrap";
 import * as htmlToImage from "html-to-image";
+import { useTheme } from "./ThemeContext";
 
 export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
   const fileInputRef = useRef();
+  const { theme, themeColors } = useTheme();
 
-  // Save current graph as JSON
+  // --- File / Graph Handlers ---
   const handleSave = () => {
     const graph = { nodes, edges };
     const blob = new Blob([JSON.stringify(graph, null, 2)], { type: "application/json" });
@@ -17,7 +20,6 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
     URL.revokeObjectURL(url);
   };
 
-  // Load graph from JSON file
   const handleLoad = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -35,7 +37,6 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
     reader.readAsText(file);
   };
 
-  // Clear current graph
   const handleNew = () => {
     if (window.confirm("Are you sure you want to start a new graph? Unsaved changes will be lost.")) {
       setNodes([]);
@@ -43,7 +44,6 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
     }
   };
 
-  // Export full graph as image
   const handleExportImage = () => {
     const el = document.querySelector(".react-flow");
     if (!el) return alert("ReactFlow container not found!");
@@ -51,18 +51,17 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
     const width = el.scrollWidth;
     const height = el.scrollHeight;
 
-    // Clone element to avoid modifying UI
     const clone = el.cloneNode(true);
     clone.style.transform = "scale(1)";
     clone.style.transformOrigin = "top left";
     clone.style.width = `${width}px`;
     clone.style.height = `${height}px`;
-    clone.style.background = "white";
+    clone.style.background = themeColors.background;
 
     document.body.appendChild(clone);
 
     htmlToImage
-      .toPng(clone, { width, height, style: { background: "white" } })
+      .toPng(clone, { width, height, style: { background: themeColors.background } })
       .then((dataUrl) => {
         const a = document.createElement("a");
         a.href = dataUrl;
@@ -77,9 +76,22 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
   };
 
   return (
-    <div className="d-flex align-items-center gap-2 p-2 border-bottom bg-light">
+    <div
+      className="d-flex align-items-center gap-2 p-2 border-bottom"
+      style={{
+        backgroundColor: themeColors.toolbarBg,
+        borderColor: themeColors.border,
+        color: themeColors.text,
+      }}
+    >
       {/* File Menu */}
-      <DropdownButton id="dropdown-file" title="File" variant="secondary" size="sm">
+      <DropdownButton
+        id="dropdown-file"
+        title="File"
+        variant={theme === "light" ? "secondary" : "dark"}
+        size="sm"
+        menuVariant={theme === "light" ? "light" : "dark"}
+      >
         <Dropdown.Item onClick={handleNew}>New</Dropdown.Item>
         <Dropdown.Item onClick={handleSave}>Save</Dropdown.Item>
         <Dropdown.Item onClick={() => fileInputRef.current.click()}>Load</Dropdown.Item>
@@ -96,7 +108,13 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
       />
 
       {/* Shortcuts / Help Menu */}
-      <DropdownButton id="dropdown-help" title="Help / Shortcuts" variant="info" size="sm">
+      <DropdownButton
+        id="dropdown-help"
+        title="Help / Shortcuts"
+        variant={theme === "light" ? "info" : "secondary"}
+        size="sm"
+        menuVariant={theme === "light" ? "light" : "dark"}
+      >
         <Dropdown.Header>Keyboard Shortcuts</Dropdown.Header>
         <Dropdown.Item disabled>Ctrl + C → Copy Node</Dropdown.Item>
         <Dropdown.Item disabled>Ctrl + V → Paste Node</Dropdown.Item>

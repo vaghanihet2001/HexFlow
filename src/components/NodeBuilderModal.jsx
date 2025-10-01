@@ -1,12 +1,15 @@
+// src/components/NodeBuilderModal.jsx
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
+import { useTheme } from "./ThemeContext";
 
 export default function NodeBuilderModal({ show, onClose, onSave, editingNode }) {
+  const { themeColors } = useTheme();
+
   const [label, setLabel] = useState("");
   const [fields, setFields] = useState([]);
   const [color, setColor] = useState("#ffffff"); // default white
 
-  // Load node data into modal when editing
   useEffect(() => {
     if (editingNode) {
       setLabel(editingNode.label);
@@ -56,12 +59,21 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
   };
 
   return (
-    <Modal show={show} onHide={onClose} size="lg">
-      <Modal.Header closeButton>
+    <Modal
+      show={show}
+      onHide={onClose}
+      size="lg"
+      style={{ color: themeColors.text }}
+      contentClassName="bg-transparent border-0"
+    >
+      <Modal.Header
+        closeButton
+        style={{ backgroundColor: themeColors.cardBg, color: themeColors.text }}
+      >
         <Modal.Title>{editingNode ? "Edit Node" : "Create New Node"}</Modal.Title>
       </Modal.Header>
 
-      <Modal.Body>
+      <Modal.Body style={{ backgroundColor: themeColors.cardBg, color: themeColors.text }}>
         {/* Node Label */}
         <Form.Group className="mb-3">
           <Form.Label>Node Label</Form.Label>
@@ -69,6 +81,7 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
             type="text"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
+            style={{ backgroundColor: themeColors.background, color: themeColors.text, borderColor: themeColors.border }}
           />
         </Form.Group>
 
@@ -79,13 +92,18 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
             type="color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
+            style={{ backgroundColor: themeColors.background, borderColor: themeColors.border }}
           />
         </Form.Group>
 
         {/* Fields */}
         <h6>Fields</h6>
         {fields.map((field) => (
-          <div key={field.id} className="border rounded p-2 mb-2 bg-light">
+          <div
+            key={field.id}
+            className="border rounded p-2 mb-2"
+            style={{ backgroundColor: themeColors.cardBg, color: themeColors.text, borderColor: themeColors.border }}
+          >
             <div className="d-flex justify-content-between align-items-center mb-2">
               <strong>{field.type.toUpperCase()}</strong>
               <Button
@@ -103,10 +121,10 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
                 type="text"
                 value={field.label}
                 onChange={(e) => updateField(field.id, "label", e.target.value)}
+                style={{ backgroundColor: themeColors.background, color: themeColors.text, borderColor: themeColors.border }}
               />
             </Form.Group>
 
-            {/* Show options input for dropdown, radio, and checkbox */}
             {(field.type === "dropdown" ||
               field.type === "radio" ||
               field.type === "checkbox") && (
@@ -118,6 +136,7 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
                   onChange={(e) =>
                     updateField(field.id, "options", e.target.value.split(","))
                   }
+                  style={{ backgroundColor: themeColors.background, color: themeColors.text, borderColor: themeColors.border }}
                 />
               </Form.Group>
             )}
@@ -133,7 +152,7 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
         </div>
       </Modal.Body>
 
-      <Modal.Footer>
+      <Modal.Footer style={{ backgroundColor: themeColors.cardBg }}>
         <Button variant="secondary" onClick={onClose}>
           Cancel
         </Button>

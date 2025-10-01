@@ -1,5 +1,7 @@
+// src/components/NodeDetailsPanel.jsx
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { useTheme } from "./ThemeContext";
 
 export default function NodeDetailsPanel({
   node,
@@ -8,18 +10,35 @@ export default function NodeDetailsPanel({
   deleteNode,
   onClosePanel,
 }) {
+  const { themeColors } = useTheme();
+
   if (!node) return null;
 
   return (
     <div
-      className="bg-light border-start d-flex flex-column"
-      style={{ width: "250px", height: "100vh" }}
+      className="d-flex flex-column border-start"
+      style={{
+        width: "250px",
+        height: "100vh",
+        backgroundColor: themeColors.sidebarBg,
+        color: themeColors.text,
+        borderColor: themeColors.border,
+      }}
     >
       {/* Top Header */}
-      <div className="flex-shrink-0 p-3 border-bottom d-flex justify-content-between align-items-center">
+      <div
+        className="flex-shrink-0 p-3 border-bottom d-flex justify-content-between align-items-center"
+        style={{ borderColor: themeColors.border }}
+      >
         <h5 className="mb-0">Node Details</h5>
         <button
-          style={{ border: "none", background: "transparent", fontSize: "18px", cursor: "pointer" }}
+          style={{
+            border: "none",
+            background: "transparent",
+            fontSize: "18px",
+            cursor: "pointer",
+            color: themeColors.text,
+          }}
           onClick={onClosePanel}
         >
           ×
@@ -34,6 +53,11 @@ export default function NodeDetailsPanel({
           <input
             type="text"
             className="form-control"
+            style={{
+              backgroundColor: themeColors.cardBg,
+              color: themeColors.text,
+              borderColor: themeColors.border,
+            }}
             value={node.data.label}
             onChange={(e) => updateNodeData(node.id, "label", e.target.value)}
           />
@@ -41,13 +65,26 @@ export default function NodeDetailsPanel({
 
         {/* Custom Fields */}
         {node.data.fields?.map((field) => (
-          <div key={field.id} className="mb-3 border rounded p-2 bg-white">
+          <div
+            key={field.id}
+            className="mb-3 border rounded p-2"
+            style={{
+              backgroundColor: themeColors.cardBg,
+              borderColor: themeColors.border,
+              color: themeColors.text,
+            }}
+          >
             <label className="form-label">{field.label}</label>
 
             {field.type === "text" && (
               <input
                 type="text"
                 className="form-control"
+                style={{
+                  backgroundColor: themeColors.background,
+                  color: themeColors.text,
+                  borderColor: themeColors.border,
+                }}
                 value={field.value || ""}
                 onChange={(e) =>
                   updateNodeField(node.id, field.id, "value", e.target.value)
@@ -58,6 +95,11 @@ export default function NodeDetailsPanel({
             {field.type === "dropdown" && (
               <select
                 className="form-select"
+                style={{
+                  backgroundColor: themeColors.background,
+                  color: themeColors.text,
+                  borderColor: themeColors.border,
+                }}
                 value={field.value || ""}
                 onChange={(e) =>
                   updateNodeField(node.id, field.id, "value", e.target.value)
@@ -71,38 +113,77 @@ export default function NodeDetailsPanel({
               </select>
             )}
 
-             {field.type === "radio" &&
+            {field.type === "radio" &&
               field.options?.map((opt) => (
                 <div className="form-check" key={opt}>
-                  <input className="form-check-input" type="radio" name={field.id} value={opt} checked={field.value === opt} onChange={() => updateNodeField(node.id, field.id, "value", opt)} />
-                  <label className="form-check-label">{opt}</label>
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name={field.id}
+                    value={opt}
+                    checked={field.value === opt}
+                    onChange={() =>
+                      updateNodeField(node.id, field.id, "value", opt)
+                    }
+                    style={{
+                      backgroundColor: themeColors.background,
+                      borderColor: themeColors.border,
+                    }}
+                  />
+                  <label
+                    className="form-check-label"
+                    style={{ color: themeColors.text }}
+                  >
+                    {opt}
+                  </label>
                 </div>
               ))}
 
             {field.type === "checkbox" &&
               field.options?.map((opt) => (
                 <div className="form-check" key={opt}>
-                  <input className="form-check-input" type="checkbox" checked={field.value?.includes(opt)} onChange={(e) => {
-                    let newValue = field.value || [];
-                    if (e.target.checked) newValue = [...newValue, opt];
-                    else newValue = newValue.filter((v) => v !== opt);
-                    updateNodeField(node.id, field.id, "value", newValue);
-                  }} />
-                  <label className="form-check-label">{opt}</label>
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={field.value?.includes(opt)}
+                    onChange={(e) => {
+                      let newValue = field.value || [];
+                      if (e.target.checked) newValue = [...newValue, opt];
+                      else newValue = newValue.filter((v) => v !== opt);
+                      updateNodeField(node.id, field.id, "value", newValue);
+                    }}
+                    style={{
+                      backgroundColor: themeColors.background,
+                      borderColor: themeColors.border,
+                    }}
+                  />
+                  <label
+                    className="form-check-label"
+                    style={{ color: themeColors.text }}
+                  >
+                    {opt}
+                  </label>
                 </div>
               ))}
           </div>
         ))}
-        
-        
       </div>
 
       {/* Delete Button */}
       <div
         className="flex-shrink-0 p-3 border-top"
-        style={{ position: "sticky", bottom: 0, backgroundColor: "#f8f9fa", zIndex: 10 }}
+        style={{
+          position: "sticky",
+          bottom: 0,
+          backgroundColor: themeColors.sidebarBg,
+          borderColor: themeColors.border,
+          zIndex: 10,
+        }}
       >
-        <button className="btn btn-danger w-100" onClick={() => deleteNode(node.id)}>
+        <button
+          className="btn btn-danger w-100"
+          onClick={() => deleteNode(node.id)}
+        >
           Delete Node
         </button>
       </div>

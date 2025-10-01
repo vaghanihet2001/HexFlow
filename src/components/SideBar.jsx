@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import NodeBuilderModal from "./NodeBuilderModal";
-import { Button } from "react-bootstrap";
+import { Button, Form } from "react-bootstrap";
+import { useTheme } from "./ThemeContext";
+import { FaTrash, FaPen } from "react-icons/fa";
 
 export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, onDeleteCustomNode }) {
   const [search, setSearch] = useState("");
@@ -8,6 +10,8 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
   const [showModal, setShowModal] = useState(false);
   const [editNode, setEditNode] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const { themeColors } = useTheme();
 
   useEffect(() => {
     const fetchNodes = async () => {
@@ -77,23 +81,47 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
 
   return (
     <div
-      className="d-flex flex-column bg-light border-end"
-      style={{ width: isCollapsed ? "50px" : "280px", height: "100vh", transition: "width 0.3s" }}
+      className="d-flex flex-column"
+      style={{
+        width: isCollapsed ? "50px" : "280px",
+        height: "100vh",
+        transition: "width 0.3s",
+        backgroundColor: themeColors.sidebarBg,
+        borderRight: `1px solid ${themeColors.border}`,
+        color: themeColors.text,
+      }}
     >
       {/* Top Sticky Section */}
       {!isCollapsed && (
-        <div className="flex-shrink-0 px-3 pt-2 pb-1 border-bottom" style={{ position: "sticky", top: 0, backgroundColor: "#f8f9fa", zIndex: 10 }}>
+        <div
+          className="flex-shrink-0 px-3 pt-2 pb-1"
+          style={{
+            position: "sticky",
+            top: 0,
+            backgroundColor: themeColors.sidebarBg,
+            zIndex: 10,
+            borderBottom: `1px solid ${themeColors.border}`,
+          }}
+        >
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="mb-0">Node Palette</h5>
             <Button size="sm" variant="outline-secondary" onClick={() => setIsCollapsed(!isCollapsed)}>⬅</Button>
           </div>
-          <input
+          <Form.Control
             type="text"
-            className="form-control mb-2"
+            className="mb-2"
             placeholder="Search nodes..."
+    
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            style={{
+              backgroundColor: themeColors.inputBg,
+              color: themeColors.text,
+              placeholderColor: themeColors.placeholderText,
+              borderColor: themeColors.border,
+            }}
           />
+          
         </div>
       )}
 
@@ -108,8 +136,12 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
                   size="sm"
                   className="flex-grow-1 me-1 d-flex align-items-center"
                   onClick={() => onAddNode(node)}
+                  style={{
+                    backgroundColor: themeColors.cardBg,
+                    color: themeColors.text,
+                    borderColor: themeColors.border,
+                  }}
                 >
-                  {/* Colored indicator */}
                   <span
                     style={{
                       width: "16px",
@@ -124,25 +156,26 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
                 </Button>
 
                 {node.id?.startsWith("custom_") && (
-                  <>
+                  <div className="d-flex gap-1">
                     <Button
-                      variant="outline-warning"
+                      variant={themeColors.buttonVariant}
                       size="sm"
+                      style={{ backgroundColor: themeColors.cardBg, color: themeColors.text, borderColor: themeColors.border }}
                       onClick={() => {
                         setEditNode(node);
                         setShowModal(true);
                       }}
                     >
-                      ✎
+                      <FaPen />
                     </Button>
                     <Button
-                      variant="outline-danger"
+                      variant="danger"
                       size="sm"
                       onClick={() => handleDelete(node.id)}
                     >
-                      🗑
+                      <FaTrash />
                     </Button>
-                  </>
+                  </div>
                 )}
               </div>
             ))}
@@ -152,7 +185,16 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
 
       {/* Bottom Sticky Buttons */}
       {!isCollapsed && (
-        <div className="flex-shrink-0 p-3 border-top" style={{ position: "sticky", bottom: 0, backgroundColor: "#f8f9fa", zIndex: 10 }}>
+        <div
+          className="flex-shrink-0 p-3"
+          style={{
+            position: "sticky",
+            bottom: 0,
+            backgroundColor: themeColors.sidebarBg,
+            zIndex: 10,
+            borderTop: `1px solid ${themeColors.border}`,
+          }}
+        >
           <Button
             variant="primary"
             className="w-100 mb-2"
@@ -175,7 +217,9 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
 
       {/* Collapse Button (when collapsed) */}
       {isCollapsed && (
-        <div className="p-2 border-bottom d-flex justify-content-center flex-shrink-0">
+        <div className="p-2 border-bottom d-flex justify-content-center flex-shrink-0"
+          style={{ borderBottom: `1px solid ${themeColors.border}`, backgroundColor: themeColors.sidebarBg }}
+        >
           <Button size="sm" variant="outline-secondary" onClick={() => setIsCollapsed(false)}>➤</Button>
         </div>
       )}

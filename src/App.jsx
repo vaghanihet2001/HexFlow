@@ -4,16 +4,19 @@ import ReactFlow, {
   MiniMap,
   Controls,
   Background,
+  BackgroundVariant,
   useNodesState,
   useEdgesState,
 } from "reactflow";
 import "reactflow/dist/style.css";
+
 
 import { nodeTypes, availableNodes } from "./nodes";
 import { componentTypes } from "./components";
 import CustomEdge from "./components/CustomEdge";
 import EdgeDetailsPanel from "./components/EdgeDetailsPanel";
 import { useFlowHandlers } from "./hooks/useFlowHandlers";
+import { useTheme } from "./components/ThemeContext";
 
 const Sidebar = componentTypes.sideBar;
 const Toolbar = componentTypes.toolBar;
@@ -24,6 +27,8 @@ const HEADER_HEIGHT = 60;
 const TOOLBAR_HEIGHT = 50;
 
 export default function App() {
+  const { themeColors } = useTheme();
+
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodeId, setSelectedNodeId] = useState(null);
@@ -34,7 +39,6 @@ export default function App() {
   const [redoStack, setRedoStack] = useState([]);
   const [copiedNodes, setCopiedNodes] = useState([]);
 
-  // --- Persistence: load from localStorage ---
   useEffect(() => {
     const saved = localStorage.getItem("flowState");
     if (saved) {
@@ -106,7 +110,6 @@ export default function App() {
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const selectedEdge = edges.find((e) => e.id === selectedEdgeId);
 
-  // --- Keyboard shortcuts ---
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && selectedNodeId) {
@@ -180,10 +183,20 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw" }} onClick={() => setSelectedEdgeId(null)}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        width: "100vw",
+        backgroundColor: themeColors.background,
+        color: undefined,
+      }}
+      onClick={() => setSelectedEdgeId(null)}
+    >
 
       {/* === HEADER === */}
-      <Header/>
+      <Header />
 
       {/* === TOOLBAR === */}
       <div style={{ height: `${TOOLBAR_HEIGHT}px`, flexShrink: 0 }}>
@@ -191,7 +204,14 @@ export default function App() {
       </div>
 
       {/* === MAIN FLOW AREA === */}
-      <div style={{ display: "flex", flexGrow: 1, height: `calc(100vh - ${HEADER_HEIGHT + TOOLBAR_HEIGHT}px)`, overflow: "hidden" }}>
+      <div
+        style={{
+          display: "flex",
+          flexGrow: 1,
+          height: `calc(100vh - ${HEADER_HEIGHT + TOOLBAR_HEIGHT}px)`,
+          overflow: "hidden",
+        }}
+      >
         <div style={{ height: "100%", overflowY: "auto", flexShrink: 0 }}>
           <Sidebar
             availableNodes={allNodes}
@@ -206,7 +226,13 @@ export default function App() {
           />
         </div>
 
-        <div style={{ flexGrow: 1, border: "1px solid #ccc", height: "100%" }}>
+        <div
+          style={{
+            flexGrow: 1,
+            border: `1px solid ${themeColors.border}`,
+            height: "100%",
+          }}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -215,9 +241,18 @@ export default function App() {
             onConnect={onConnect}
             nodeTypes={nodeTypes}
             edgeTypes={{ custom: CustomEdge }}
-            onNodeClick={(e, node) => { setSelectedNodeId(node.id); setShowNodeDetails(true); }}
-            onEdgeClick={(e, edge) => { setSelectedEdgeId(edge.id); setSelectedNodeId(null); }}
-            onPaneClick={() => { setShowNodeDetails(false); setSelectedEdgeId(null); }}
+            onNodeClick={(e, node) => {
+              setSelectedNodeId(node.id);
+              setShowNodeDetails(true);
+            }}
+            onEdgeClick={(e, edge) => {
+              setSelectedEdgeId(edge.id);
+              setSelectedNodeId(null);
+            }}
+            onPaneClick={() => {
+              setShowNodeDetails(false);
+              setSelectedEdgeId(null);
+            }}
             onSelectionChange={({ nodes: selNodes, edges: selEdges }) => {
               setSelectedNodeId(selNodes[0]?.id || null);
               setSelectedEdgeId(selEdges[0]?.id || null);
@@ -228,9 +263,9 @@ export default function App() {
             zoomOnPinch={true}
             fitView
           >
-            <MiniMap />
+            <MiniMap nodeColor={(n) => n.color || themeColors.nodeBg} />
             <Controls />
-            <Background />
+            <Background color={themeColors.text} variant={BackgroundVariant.Dots} />
           </ReactFlow>
         </div>
 
