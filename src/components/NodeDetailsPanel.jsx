@@ -126,8 +126,7 @@ export default function NodeDetailsPanel({
                       updateNodeField(node.id, field.id, "value", opt)
                     }
                     style={{
-                      backgroundColor: themeColors.background,
-                      borderColor: themeColors.border,
+                      borderColor: themeColors.border, // keep border themed
                     }}
                   />
                   <label
@@ -153,8 +152,7 @@ export default function NodeDetailsPanel({
                       updateNodeField(node.id, field.id, "value", newValue);
                     }}
                     style={{
-                      backgroundColor: themeColors.background,
-                      borderColor: themeColors.border,
+                      borderColor: themeColors.border, // keep themed border
                     }}
                   />
                   <label
@@ -165,6 +163,7 @@ export default function NodeDetailsPanel({
                   </label>
                 </div>
               ))}
+
           </div>
         ))}
       </div>
