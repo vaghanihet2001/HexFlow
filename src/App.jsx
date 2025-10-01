@@ -18,6 +18,10 @@ import { useFlowHandlers } from "./hooks/useFlowHandlers";
 const Sidebar = componentTypes.sideBar;
 const Toolbar = componentTypes.toolBar;
 const NodeDetailsPanel = componentTypes.nodeDetailsPanel;
+const Header = componentTypes.header;
+
+const HEADER_HEIGHT = 60;
+const TOOLBAR_HEIGHT = 50;
 
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -29,7 +33,6 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const [copiedNodes, setCopiedNodes] = useState([]);
-  const toolbarHeight = 50;
 
   // --- Persistence: load from localStorage ---
   useEffect(() => {
@@ -50,7 +53,6 @@ export default function App() {
     setRedoStack([]);
   };
 
-  // --- Flow Handlers ---
   const { addNode, onConnect, deleteNode, deleteEdge } = useFlowHandlers(
     nodes,
     setNodes,
@@ -101,7 +103,6 @@ export default function App() {
     );
   };
 
-
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const selectedEdge = edges.find((e) => e.id === selectedEdgeId);
 
@@ -138,7 +139,6 @@ export default function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedNodeId, selectedEdgeId, nodes, edges, history, redoStack, copiedNodes]);
 
-  // --- Undo / Redo ---
   const undo = () => {
     if (!history.length) return;
     const prev = history[history.length - 1];
@@ -161,7 +161,6 @@ export default function App() {
     setSelectedEdgeId(null);
   };
 
-  // --- File load ---
   const handleFileLoad = (file) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -182,11 +181,17 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw" }} onClick={() => setSelectedEdgeId(null)}>
-      <div style={{ height: `${toolbarHeight}px`, flexShrink: 0 }}>
+
+      {/* === HEADER === */}
+      <Header/>
+
+      {/* === TOOLBAR === */}
+      <div style={{ height: `${TOOLBAR_HEIGHT}px`, flexShrink: 0 }}>
         <Toolbar nodes={nodes} edges={edges} setNodes={setNodes} setEdges={setEdges} />
       </div>
 
-      <div style={{ display: "flex", flexGrow: 1, height: `calc(100vh - ${toolbarHeight}px)`, overflow: "hidden" }}>
+      {/* === MAIN FLOW AREA === */}
+      <div style={{ display: "flex", flexGrow: 1, height: `calc(100vh - ${HEADER_HEIGHT + TOOLBAR_HEIGHT}px)`, overflow: "hidden" }}>
         <div style={{ height: "100%", overflowY: "auto", flexShrink: 0 }}>
           <Sidebar
             availableNodes={allNodes}

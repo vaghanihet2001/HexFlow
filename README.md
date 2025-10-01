@@ -1,4 +1,4 @@
-# ReactFlow Playground
+# HexFlow
 
 A visual graph editor built with **ReactFlow** and **React**, allowing you to create, edit, save, load, and export node-based graphs. This project includes a **custom node details panel**, a **toolbar for file operations**, and full **undo/redo support**.
 
