@@ -20,6 +20,13 @@ export default function NodeDetailsPanel({
     updateNodeField(node.id, fieldId, "hide", !field.hide);
   };
 
+  const toggleAllFields = () => {
+    const anyVisible = node.data.fields.some((f) => !f.hide);
+    node.data.fields.forEach((f) => {
+      updateNodeField(node.id, f.id, "hide", anyVisible); // hide all if any visible, else unhide all
+    });
+  };
+
   return (
     <div
       className="d-flex flex-column border-start"
@@ -48,6 +55,16 @@ export default function NodeDetailsPanel({
           onClick={onClosePanel}
         >
           ×
+        </button>
+      </div>
+
+      {/* Hide/Unhide All Fields Button */}
+      <div className="p-3 border-bottom">
+        <button
+          className="btn btn-outline-primary w-100"
+          onClick={toggleAllFields}
+        >
+          {node.data.fields.some((f) => !f.hide) ? "Hide All Fields" : "Unhide All Fields"}
         </button>
       </div>
 
