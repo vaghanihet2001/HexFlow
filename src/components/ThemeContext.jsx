@@ -43,7 +43,7 @@ export const darkTheme = {
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
 
   // Load saved theme from localStorage on mount
   useEffect(() => {

@@ -10,7 +10,6 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 
-
 import { nodeTypes, availableNodes } from "./nodes";
 import { componentTypes } from "./components";
 import CustomEdge from "./components/CustomEdge";
@@ -25,6 +24,10 @@ const Header = componentTypes.header;
 
 const HEADER_HEIGHT = 60;
 const TOOLBAR_HEIGHT = 50;
+
+// Default node size
+const DEFAULT_NODE_WIDTH = 200;
+const DEFAULT_NODE_HEIGHT = 120;
 
 export default function App() {
   const { themeColors } = useTheme();
@@ -57,13 +60,24 @@ export default function App() {
     setRedoStack([]);
   };
 
-  const { addNode, onConnect, deleteNode, deleteEdge } = useFlowHandlers(
+  // Wrap original addNode to add default width/height
+  const { addNode: baseAddNode, onConnect, deleteNode, deleteEdge } = useFlowHandlers(
     nodes,
     setNodes,
     edges,
     setEdges,
     pushToHistory
   );
+
+  const addNode = (node) => {
+    const newNode = {
+      ...node,
+      width: node.width || DEFAULT_NODE_WIDTH,
+      height: node.height || DEFAULT_NODE_HEIGHT,
+      data: { ...node.data },
+    };
+    baseAddNode(newNode);
+  };
 
   const updateNodeField = (nodeId, fieldId, key, value) => {
     setNodes((nds) =>
@@ -122,6 +136,8 @@ export default function App() {
           ...node,
           id: `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
           position: { x: node.position.x + 20, y: node.position.y + 20 },
+          width: node.width || DEFAULT_NODE_WIDTH,
+          height: node.height || DEFAULT_NODE_HEIGHT,
           data: { ...node.data, instanceId: Date.now() + Math.random() },
         }));
         pushToHistory(nodes, edges);
@@ -170,9 +186,15 @@ export default function App() {
       try {
         const { nodes: loadedNodes, edges: loadedEdges } = JSON.parse(e.target.result);
         if (loadedNodes && loadedEdges) {
-          setNodes(loadedNodes);
+          // Ensure all loaded nodes have width/height
+          const fixedNodes = loadedNodes.map((n) => ({
+            ...n,
+            width: n.width || DEFAULT_NODE_WIDTH,
+            height: n.height || DEFAULT_NODE_HEIGHT,
+          }));
+          setNodes(fixedNodes);
           setEdges(loadedEdges);
-          pushToHistory(loadedNodes, loadedEdges);
+          pushToHistory(fixedNodes, loadedEdges);
         }
       } catch (err) {
         console.error("Invalid flow file:", err);
@@ -190,20 +212,14 @@ export default function App() {
         height: "100vh",
         width: "100vw",
         backgroundColor: themeColors.background,
-        color: undefined,
       }}
       onClick={() => setSelectedEdgeId(null)}
     >
-
-      {/* === HEADER === */}
       <Header />
-
-      {/* === TOOLBAR === */}
       <div style={{ height: `${TOOLBAR_HEIGHT}px`, flexShrink: 0 }}>
         <Toolbar nodes={nodes} edges={edges} setNodes={setNodes} setEdges={setEdges} />
       </div>
 
-      {/* === MAIN FLOW AREA === */}
       <div
         style={{
           display: "flex",
@@ -222,7 +238,9 @@ export default function App() {
                 return exists ? prev.map((n) => (n.id === node.id ? node : n)) : [...prev, node];
               });
             }}
-            onDeleteCustomNode={(nodeId) => setAllNodes((prev) => prev.filter((n) => n.id !== nodeId))}
+            onDeleteCustomNode={(nodeId) =>
+              setAllNodes((prev) => prev.filter((n) => n.id !== nodeId))
+            }
           />
         </div>
 
@@ -259,8 +277,8 @@ export default function App() {
             }}
             minZoom={0.1}
             maxZoom={2}
-            zoomOnScroll={true}
-            zoomOnPinch={true}
+            zoomOnScroll
+            zoomOnPinch
             fitView
           >
             <MiniMap nodeColor={(n) => n.color || themeColors.nodeBg} />
@@ -269,7 +287,6 @@ export default function App() {
           </ReactFlow>
         </div>
 
-        {/* Node Details Panel */}
         {showNodeDetails && selectedNode && (
           <NodeDetailsPanel
             node={selectedNode}
@@ -280,7 +297,6 @@ export default function App() {
           />
         )}
 
-        {/* Edge Details Panel */}
         {selectedEdge && !selectedNode && (
           <EdgeDetailsPanel
             edge={selectedEdge}

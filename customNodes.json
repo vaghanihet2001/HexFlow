@@ -260,5 +260,73 @@
         "value": []
       }
     ]
+  },
+  {
+    "id": "custom_1760007272185",
+    "type": "customNode",
+    "label": "Camera2",
+    "custom": true,
+    "color": "#ffffff",
+    "fields": [
+      {
+        "id": 1760006820940,
+        "type": "text",
+        "label": "Name ",
+        "options": [],
+        "value": ""
+      },
+      {
+        "id": 1760006853613,
+        "type": "dropdown",
+        "label": "Protocol ",
+        "options": [
+          "Gige ",
+          "USB"
+        ],
+        "value": ""
+      },
+      {
+        "id": 1760006878542,
+        "type": "dropdown",
+        "label": "Choose Camera",
+        "options": [
+          "Keyence1 ",
+          " VAimagine1 ",
+          " USB0",
+          " USB1",
+          "USB2",
+          "USB3"
+        ],
+        "value": ""
+      },
+      {
+        "id": 1760006995907,
+        "type": "dropdown",
+        "label": "Manufacturer",
+        "options": [
+          "Keyence ",
+          " VAImagine"
+        ],
+        "value": ""
+      },
+      {
+        "id": 1760007066791,
+        "type": "dropdown",
+        "label": "Type",
+        "options": [
+          "Area ",
+          " Line"
+        ],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_1760007438961",
+    "type": "customNode",
+    "label": "Text",
+    "custom": true,
+    "color": "#bfb3ff",
+    "fields": []
   }
 ]
