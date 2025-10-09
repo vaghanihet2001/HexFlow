@@ -2,6 +2,7 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useTheme } from "./ThemeContext";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function NodeDetailsPanel({
   node,
@@ -13,6 +14,11 @@ export default function NodeDetailsPanel({
   const { themeColors } = useTheme();
 
   if (!node) return null;
+
+  const toggleFieldVisibility = (fieldId) => {
+    const field = node.data.fields.find((f) => f.id === fieldId);
+    updateNodeField(node.id, fieldId, "hide", !field.hide);
+  };
 
   return (
     <div
@@ -63,6 +69,24 @@ export default function NodeDetailsPanel({
           />
         </div>
 
+        {/* Node Color Picker */}
+        <div className="mb-3">
+          <label className="form-label">Color:</label>
+          <input
+            type="color"
+            className="form-control form-control-color"
+            value={node.data.color || "#ffffff"}
+            onChange={(e) => updateNodeData(node.id, "color", e.target.value)}
+            style={{
+              padding: 0,
+              height: "35px",
+              border: `1px solid ${themeColors.border}`,
+              backgroundColor: node.data.color || "#ffffff",
+              cursor: "pointer",
+            }}
+          />
+        </div>
+
         {/* Custom Fields */}
         {node.data.fields?.map((field) => (
           <div
@@ -74,96 +98,108 @@ export default function NodeDetailsPanel({
               color: themeColors.text,
             }}
           >
-            <label className="form-label">{field.label}</label>
-
-            {field.type === "text" && (
-              <input
-                type="text"
-                className="form-control"
-                style={{
-                  backgroundColor: themeColors.background,
-                  color: themeColors.text,
-                  borderColor: themeColors.border,
-                }}
-                value={field.value || ""}
-                onChange={(e) =>
-                  updateNodeField(node.id, field.id, "value", e.target.value)
-                }
-              />
-            )}
-
-            {field.type === "dropdown" && (
-              <select
-                className="form-select"
-                style={{
-                  backgroundColor: themeColors.background,
-                  color: themeColors.text,
-                  borderColor: themeColors.border,
-                }}
-                value={field.value || ""}
-                onChange={(e) =>
-                  updateNodeField(node.id, field.id, "value", e.target.value)
-                }
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <label className="form-label mb-0">{field.label}</label>
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => toggleFieldVisibility(field.id)}
+                title={field.hide ? "Show Field" : "Hide Field"}
               >
-                {field.options?.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            )}
+                {field.hide ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
 
-            {field.type === "radio" &&
-              field.options?.map((opt) => (
-                <div className="form-check" key={opt}>
+            {!field.hide && (
+              <>
+                {field.type === "text" && (
                   <input
-                    className="form-check-input"
-                    type="radio"
-                    name={field.id}
-                    value={opt}
-                    checked={field.value === opt}
-                    onChange={() =>
-                      updateNodeField(node.id, field.id, "value", opt)
+                    type="text"
+                    className="form-control"
+                    style={{
+                      backgroundColor: themeColors.background,
+                      color: themeColors.text,
+                      borderColor: themeColors.border,
+                    }}
+                    value={field.value || ""}
+                    onChange={(e) =>
+                      updateNodeField(node.id, field.id, "value", e.target.value)
                     }
-                    style={{
-                      borderColor: themeColors.border, // keep border themed
-                    }}
                   />
-                  <label
-                    className="form-check-label"
-                    style={{ color: themeColors.text }}
-                  >
-                    {opt}
-                  </label>
-                </div>
-              ))}
+                )}
 
-            {field.type === "checkbox" &&
-              field.options?.map((opt) => (
-                <div className="form-check" key={opt}>
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={field.value?.includes(opt)}
-                    onChange={(e) => {
-                      let newValue = field.value || [];
-                      if (e.target.checked) newValue = [...newValue, opt];
-                      else newValue = newValue.filter((v) => v !== opt);
-                      updateNodeField(node.id, field.id, "value", newValue);
-                    }}
+                {field.type === "dropdown" && (
+                  <select
+                    className="form-select"
                     style={{
-                      borderColor: themeColors.border, // keep themed border
+                      backgroundColor: themeColors.background,
+                      color: themeColors.text,
+                      borderColor: themeColors.border,
                     }}
-                  />
-                  <label
-                    className="form-check-label"
-                    style={{ color: themeColors.text }}
+                    value={field.value || ""}
+                    onChange={(e) =>
+                      updateNodeField(node.id, field.id, "value", e.target.value)
+                    }
                   >
-                    {opt}
-                  </label>
-                </div>
-              ))}
+                    {field.options?.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                )}
 
+                {field.type === "radio" &&
+                  field.options?.map((opt) => (
+                    <div className="form-check" key={opt}>
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name={field.id}
+                        value={opt}
+                        checked={field.value === opt}
+                        onChange={() =>
+                          updateNodeField(node.id, field.id, "value", opt)
+                        }
+                        style={{
+                          borderColor: themeColors.border,
+                        }}
+                      />
+                      <label
+                        className="form-check-label"
+                        style={{ color: themeColors.text }}
+                      >
+                        {opt}
+                      </label>
+                    </div>
+                  ))}
+
+                {field.type === "checkbox" &&
+                  field.options?.map((opt) => (
+                    <div className="form-check" key={opt}>
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={field.value?.includes(opt)}
+                        onChange={(e) => {
+                          let newValue = field.value || [];
+                          if (e.target.checked) newValue = [...newValue, opt];
+                          else newValue = newValue.filter((v) => v !== opt);
+                          updateNodeField(node.id, field.id, "value", newValue);
+                        }}
+                        style={{
+                          borderColor: themeColors.border,
+                        }}
+                      />
+                      <label
+                        className="form-check-label"
+                        style={{ color: themeColors.text }}
+                      >
+                        {opt}
+                      </label>
+                    </div>
+                  ))}
+              </>
+            )}
           </div>
         ))}
       </div>

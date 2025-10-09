@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { useTheme } from "./ThemeContext";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function NodeBuilderModal({ show, onClose, onSave, editingNode }) {
   const { themeColors } = useTheme();
@@ -29,6 +30,7 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
         id: Date.now(),
         type,
         label: `${type} field`,
+        hide: false, // default visible
         options: [],
         value: type === "checkbox" ? [] : "",
       },
@@ -41,6 +43,10 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
 
   const deleteField = (id) => {
     setFields(fields.filter((f) => f.id !== id));
+  };
+
+  const toggleVisibility = (id) => {
+    setFields(fields.map((f) => (f.id === id ? { ...f, hide: !f.hide } : f)));
   };
 
   const handleSave = () => {
@@ -106,13 +112,25 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
           >
             <div className="d-flex justify-content-between align-items-center mb-2">
               <strong>{field.type.toUpperCase()}</strong>
-              <Button
-                variant="outline-danger"
-                size="sm"
-                onClick={() => deleteField(field.id)}
-              >
-                ❌ Delete
-              </Button>
+              <div className="d-flex align-items-center gap-2">
+                {/* Eye icon for visibility */}
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => toggleVisibility(field.id)}
+                  title={field.hide ? "Show Field" : "Hide Field"}
+                >
+                  {field.hide ? <FaEyeSlash /> : <FaEye />}
+                </Button>
+
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  onClick={() => deleteField(field.id)}
+                >
+                  ❌ Delete
+                </Button>
+              </div>
             </div>
 
             <Form.Group className="mb-2">
@@ -125,9 +143,7 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
               />
             </Form.Group>
 
-            {(field.type === "dropdown" ||
-              field.type === "radio" ||
-              field.type === "checkbox") && (
+            {(field.type === "dropdown" || field.type === "radio" || field.type === "checkbox") && (
               <Form.Group>
                 <Form.Label>Options (comma separated)</Form.Label>
                 <Form.Control
