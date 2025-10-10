@@ -108,18 +108,24 @@ export default function App() {
   const updateEdgeData = (edgeId, key, value) => {
     setEdges((eds) =>
       eds.map((e) =>
-        e.id === edgeId ? { ...e, data: { ...e.data, [key]: value } } : e
+        e.id === edgeId
+          ? { ...e, data: { ...e.data, [key]: value } } // only data object changes
+          : e
       )
     );
   };
 
+
   const updateEdgeType = (edgeId, newType) => {
     setEdges((eds) =>
       eds.map((e) =>
-        e.id === edgeId ? { ...e, type: "custom", data: { ...e.data, type: newType } } : e
+        e.id === edgeId
+          ? { ...e, type: "custom", data: { ...e.data, type: newType } } // type always stays 'custom'
+          : e
       )
     );
   };
+
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const selectedEdge = edges.find((e) => e.id === selectedEdgeId);

@@ -3,22 +3,32 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useTheme } from "./ThemeContext";
 
-export default function EdgeDetailsPanel({ edge, updateEdgeData, updateEdgeType, deleteEdge, onClosePanel }) {
+export default function EdgeDetailsPanel({
+  edge,
+  updateEdgeData,
+  updateEdgeType,
+  deleteEdge,
+  onClosePanel,
+}) {
   const { themeColors } = useTheme();
+  const [labelInput, setLabelInput] = useState("");
+  const [type, setType] = useState("bezier");
+  const [color, setColor] = useState("#222222");
+
+  useEffect(() => {
+    if (edge?.data) {
+      setLabelInput(edge.data.label || "");
+      setType(edge.data.type || "bezier");
+      setColor(edge.data.color || "#222222");
+    }
+  }, [edge?.id]);
 
   if (!edge) return null;
 
-  const [labelInput, setLabelInput] = useState(edge.data?.label || "");
-  const [type, setType] = useState(edge.data?.type || "normal");
-
-  useEffect(() => {
-    setLabelInput(edge.data?.label || "");
-    setType(edge.data?.type || "normal");
-  }, [edge.id]);
-
   const handleLabelChange = (e) => {
-    setLabelInput(e.target.value);
-    updateEdgeData(edge.id, "label", e.target.value); // update on every change
+    const value = e.target.value;
+    setLabelInput(value);
+    updateEdgeData(edge.id, "label", value);
   };
 
   const handleTypeChange = (e) => {
@@ -26,6 +36,12 @@ export default function EdgeDetailsPanel({ edge, updateEdgeData, updateEdgeType,
     setType(newType);
     updateEdgeType(edge.id, newType);
     updateEdgeData(edge.id, "type", newType);
+  };
+
+  const handleColorChange = (e) => {
+    const newColor = e.target.value;
+    setColor(newColor);
+    updateEdgeData(edge.id, "color", newColor);
   };
 
   return (
@@ -62,6 +78,7 @@ export default function EdgeDetailsPanel({ edge, updateEdgeData, updateEdgeType,
 
       {/* Content */}
       <div className="flex-grow-1 overflow-auto p-3">
+        {/* Label */}
         <div className="mb-3">
           <label className="form-label">Label:</label>
           <input
@@ -77,6 +94,7 @@ export default function EdgeDetailsPanel({ edge, updateEdgeData, updateEdgeType,
           />
         </div>
 
+        {/* Type */}
         <div className="mb-3">
           <label className="form-label">Type:</label>
           <select
@@ -89,14 +107,27 @@ export default function EdgeDetailsPanel({ edge, updateEdgeData, updateEdgeType,
             value={type}
             onChange={handleTypeChange}
           >
-            <option value="normal">Normal</option>
-            <option value="thread">Thread</option>
-            <option value="process">Process</option>
+            <option value="bezier">Bezier</option>
+            <option value="straight">Straight</option>
+            {/* <option value="step">Step</option> */}
+            <option value="smoothstep">Smooth Step</option>
           </select>
+        </div>
+
+        {/* Color */}
+        <div className="mb-3">
+          <label className="form-label">Color:</label>
+          <input
+            type="color"
+            className="form-control form-control-color"
+            value={color}
+            onChange={handleColorChange}
+            title="Choose edge color"
+          />
         </div>
       </div>
 
-      {/* Delete Button */}
+      {/* Delete */}
       <div
         className="flex-shrink-0 p-3 border-top"
         style={{
@@ -104,13 +135,9 @@ export default function EdgeDetailsPanel({ edge, updateEdgeData, updateEdgeType,
           bottom: 0,
           backgroundColor: themeColors.sidebarBg,
           borderColor: themeColors.border,
-          zIndex: 10,
         }}
       >
-        <button
-          className="btn btn-danger w-100"
-          onClick={() => deleteEdge(edge.id)}
-        >
+        <button className="btn btn-danger w-100" onClick={() => deleteEdge(edge.id)}>
           Delete Edge
         </button>
       </div>

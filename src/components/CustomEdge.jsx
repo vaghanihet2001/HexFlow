@@ -1,7 +1,5 @@
-// src/components/CustomEdge.jsx
-import React from "react";
-import { BaseEdge, getBezierPath } from "reactflow";
-import { useTheme } from "./ThemeContext"; // import your ThemeContext
+import { BaseEdge, getBezierPath, getSmoothStepPath, getStraightPath } from "reactflow";
+import { useTheme } from "./ThemeContext";
 
 export default function CustomEdge({
   id,
@@ -12,42 +10,67 @@ export default function CustomEdge({
   targetY,
   targetPosition,
   selected,
-  data, // <-- important to access label and type
+  data = {},
 }) {
-  const { theme } = useTheme(); // get current theme
+  const { theme } = useTheme();
 
-  const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-  });
+  const edgeType = data.type || "bezier";
+  const color = data.color || (theme === "dark" ? "#fff" : "#222");
+  const label = data.label || "";
 
-  // Determine color based on type
-  let strokeColor = "#222"; // default dark
-  if (data?.type === "thread") strokeColor = "blue";
-  else if (data?.type === "process") strokeColor = "green";
-  else if (theme === "dark") strokeColor = "#fff"; // normal edge white in dark theme
-  else strokeColor = "#222"; // normal edge dark in light theme
+  let edgePath;
+  let labelX = (sourceX + targetX) / 2;
+  let labelY = (sourceY + targetY) / 2;
+
+  switch (edgeType) {
+    case "straight":
+      [edgePath, labelX, labelY] = getStraightPath({ sourceX, sourceY, targetX, targetY });
+      break;
+    case "smoothstep":
+      [edgePath, labelX, labelY] = getSmoothStepPath({
+                                    sourceX, 
+                                    sourceY,
+                                    sourcePosition, 
+                                    targetX, 
+                                    targetY,
+                                    targetPosition,
+                                    });
+      break;
+    default:
+      [edgePath, labelX, labelY] = getBezierPath({
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetX,
+        targetY,
+        targetPosition,
+      });
+
+  }
 
   return (
     <>
       <BaseEdge
         id={id}
         path={edgePath}
-        style={{ stroke: selected ? "#ff5555" : strokeColor, strokeWidth: selected ? 2 : 2 }}
+        style={{
+          stroke: selected ? "#ff5555" : color,
+          strokeWidth: selected ? 2.5 : 2,
+        }}
       />
-      {data?.label && (
+      {label && (
         <text
           x={labelX}
           y={labelY}
           textAnchor="middle"
           dominantBaseline="middle"
-          style={{ fill: theme === "dark" ? "#fff" : "#000", fontSize: 12, pointerEvents: "none" }}
+          style={{
+            fill: theme === "dark" ? "#fff" : "#000",
+            fontSize: 12,
+            pointerEvents: "none",
+          }}
         >
-          {data.label}
+          {label}
         </text>
       )}
     </>
