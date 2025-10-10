@@ -1,17 +1,59 @@
-import React from "react";
-import { Handle, Position } from "reactflow";
+import React, { useState, useEffect } from "react";
+import { Handle, Position, NodeResizer } from "reactflow";
 
-export default function CustomNode({ data }) {
+export default function CustomNode({ data, selected }) {
+  const [nodeHeight, setNodeHeight] = useState(100); // Set initial height
+
+  useEffect(() => {
+    // Update nodeHeight when the node's size changes
+    const handleResize = () => {
+      const nodeElement = document.getElementById(data.id);
+      if (nodeElement) {
+        
+        setNodeHeight(nodeElement.offsetHeight);
+
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [data.id]);
+
   return (
-    <div
-      style={{
-        padding: "10px",
-        border: "2px solid #555",
-        borderRadius: "5px",
-        background: data.color || "#fff",
-        minWidth: "150px",
-      }}
-    >
+
+      <div
+        id={data.id}
+        // hide scrollbar
+        style={{
+              padding: "10px",
+              border: "2px solid #555",
+              borderRadius: "8px",
+              background: data.color || "#fff",
+              minWidth: "100px",
+              minHeight: "50px",
+              maxHeight: "calc(100vh - 20px)",
+              height: "100%",
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              scrollbarWidth: "thin", 
+              scrollbarColor: "#888 transparent", 
+              WebkitScrollbar: "none",
+              WebkitScrollbarThumb: {
+                backgroundColor: "red",
+                borderRadius: "10px",
+              },
+              WebkitScrollbarTrack: {
+                backgroundColor: "transparent",
+              },
+            }}
+
+
+      >
+      {selected && <NodeResizer minWidth={100} minHeight={50} />}
       <div><strong>{data.label}</strong></div>
 
       {data.fields
