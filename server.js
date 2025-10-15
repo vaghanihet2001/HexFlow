@@ -50,4 +50,5 @@ app.delete("/nodes/:id", (req, res) => {
   res.json({ success: true });
 });
 
-app.listen(PORT, () => console.log(`Backend running at http://localhost:${PORT}`));
+app.listen(PORT, "0.0.0.0", () => console.log("Backend running at http://0.0.0.0:5000"));
+
