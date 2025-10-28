@@ -3,37 +3,19 @@ import cors from "cors";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createServer as createViteServer } from "vite";
 
 const app = express();
-
-// Render dynamically sets the port for you:
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
-// -------- Serve Frontend (React Build) --------
-
-// Get current directory (for ES modules)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Serve static files from the dist folder
-const distPath = path.join(__dirname, "dist");
-if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
-
-  // Fallback to index.html for React Router
-  app.get("*", (req, res, next) => {
-    if (req.path.startsWith("/nodes")) return next(); // skip API routes
-    res.sendFile(path.join(distPath, "index.html"));
-  });
-}
-
-// -------- Backend API --------
-
 const nodesFile = path.join(process.cwd(), "customNodes.json");
 
+// === API ROUTES ===
 app.get("/nodes", (req, res) => {
   if (!fs.existsSync(nodesFile)) return res.json([]);
   const data = JSON.parse(fs.readFileSync(nodesFile));
@@ -66,7 +48,18 @@ app.delete("/nodes/:id", (req, res) => {
   res.json({ success: true });
 });
 
-// -------- Start Server --------
-app.listen(PORT, "0.0.0.0", () =>
-  console.log(`Server running on port ${PORT}`)
-);
+// === START VITE DEV SERVER ===
+const startServer = async () => {
+  const vite = await createViteServer({
+    server: { middlewareMode: true, port: PORT, host: "0.0.0.0" },
+    appType: "custom",
+  });
+
+  app.use(vite.middlewares);
+
+  app.listen(PORT, "0.0.0.0", () =>
+    console.log(`✅ Server + Frontend running on http://0.0.0.0:${PORT}`)
+  );
+};
+
+startServer();
