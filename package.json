@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
-    "start:backend": "node server.js",
-    "start:frontend": "vite --host 0.0.0.0 --port 5173 --force"
+    "build": "vite build",
+    "start": "node server.js"
   },
 
   "dependencies": {
