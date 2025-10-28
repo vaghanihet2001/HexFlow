@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = 5173;
 
 app.use(cors());
 app.use(express.json());
