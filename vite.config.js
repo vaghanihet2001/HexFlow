@@ -7,6 +7,6 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: process.env.PORT || 5000,
-    allowedHosts: ["hexflow.onrender.com"], // 👈 add your Render domain here
+    allowedHosts: ["www.hexverce.in","hexflow.onrender.com"], // 👈 add your Render domain here
   },
 });
