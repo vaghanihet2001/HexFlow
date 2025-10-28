@@ -4,9 +4,10 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
+import { env } from "process";
 
 const app = express();
-const PORT = 5173;
+const PORT = env.BACKEND_PORT || 5173;
 
 app.use(cors());
 app.use(express.json());

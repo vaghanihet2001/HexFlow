@@ -4,6 +4,10 @@ import { Button, Form } from "react-bootstrap";
 import { useTheme } from "./ThemeContext";
 import { FaTrash, FaPen } from "react-icons/fa";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+
+
 export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, onDeleteCustomNode }) {
   const [search, setSearch] = useState("");
   const [customNodes, setCustomNodes] = useState([]);
@@ -16,11 +20,12 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
   useEffect(() => {
     const fetchNodes = async () => {
       try {
-        const res = await fetch("http://localhost:5173/nodes");
+        const res = await fetch(BACKEND_URL+"/nodes");
         const data = await res.json();
         setCustomNodes(data);
       } catch (err) {
         console.error("Failed to fetch custom nodes:", err);
+        console.log(BACKEND_URL);
       }
     };
     fetchNodes();
@@ -29,12 +34,12 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
   const handleSaveCustomNode = async (node) => {
     const nodeWithId = { ...node, id: node.id || `custom_${Date.now()}` };
     try {
-      await fetch("http://localhost:5173/nodes", {
+      await fetch(BACKEND_URL+"/nodes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(nodeWithId),
       });
-      const res = await fetch("http://localhost:5173/nodes");
+      const res = await fetch(BACKEND_URL+"/nodes");
       const data = await res.json();
       setCustomNodes(data);
       onSaveCustomNode(nodeWithId);
@@ -47,8 +52,8 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
   const handleDelete = async (nodeId) => {
     if (!window.confirm("Are you sure you want to delete this custom node?")) return;
     try {
-      await fetch(`http://localhost:5173/nodes/${nodeId}`, { method: "DELETE" });
-      const res = await fetch("http://localhost:5173/nodes");
+      await fetch(`${BACKEND_URL}/nodes/${nodeId}`, { method: "DELETE" });
+      const res = await fetch(BACKEND_URL+"/nodes");
       const data = await res.json();
       setCustomNodes(data);
       onDeleteCustomNode(nodeId);
@@ -60,10 +65,10 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
   const handleReset = async () => {
     if (!window.confirm("Are you sure you want to reset all custom nodes?")) return;
     try {
-      const allNodes = await fetch("http://localhost:5173/nodes");
+      const allNodes = await fetch(BACKEND_URL+"/nodes");
       const data = await allNodes.json();
       for (const node of data) {
-        await fetch(`http://localhost:5173/nodes/${node.id}`, { method: "DELETE" });
+        await fetch(`${BACKEND_URL}/nodes/${node.id}`, { method: "DELETE" });
       }
       setCustomNodes([]);
     } catch (err) {
