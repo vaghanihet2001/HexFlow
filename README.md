@@ -44,14 +44,14 @@ yarn install
 
 ### 3. Start the development server
 ```bash
-npm run dev
+npm run start
 ```
 or with Yarn:
 
 ```bash
-yarn dev
+yarn start
 ```
-Open http://localhost:5173 in your browser to see the project.
+Open http://localhost:5000 in your browser to see the project.
 
 Folder Structure
 ```bash

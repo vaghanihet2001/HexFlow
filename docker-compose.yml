@@ -4,7 +4,7 @@ services:
     container_name: hexflow-backend
     command: node server.js
     ports:
-      - "5000:5000"
+      - "5173:5173"
     volumes:
       - .:/app
       - /app/node_modules
@@ -14,7 +14,7 @@ services:
     container_name: hexflow-frontend
     command: npm run start:frontend
     ports:
-      - "5173:5173"
+      - "5000:5000"
     volumes:
       - .:/app
       - /app/node_modules
