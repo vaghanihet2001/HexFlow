@@ -3,12 +3,16 @@ import NodeBuilderModal from "./NodeBuilderModal";
 import { Button, Form } from "react-bootstrap";
 import { useTheme } from "./ThemeContext";
 import { FaTrash, FaPen } from "react-icons/fa";
+import { getAuth } from "firebase/auth";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-
-
-export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, onDeleteCustomNode }) {
+export default function Sidebar({
+  availableNodes,
+  onAddNode,
+  onSaveCustomNode,
+  onDeleteCustomNode,
+}) {
   const [search, setSearch] = useState("");
   const [customNodes, setCustomNodes] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -17,30 +21,74 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
 
   const { themeColors } = useTheme();
 
+  // =============================
+  // 🔐 Helper: Fetch with Firebase Auth Token
+  // =============================
+  const fetchWithAuth = async (url, options = {}) => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) throw new Error("User not logged in");
+    const token = await user.getIdToken();
+
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+  };
+
+  // =============================
+  // 📥 Fetch user-specific nodes (safe version)
+  // =============================
   useEffect(() => {
     const fetchNodes = async () => {
       try {
-        const res = await fetch(BACKEND_URL+"/nodes");
+        const res = await fetchWithAuth(`${BACKEND_URL}/nodes`);
         const data = await res.json();
-        setCustomNodes(data);
+
+        // 🛠️ FIX: Only update if we actually have data
+        if (Array.isArray(data) && data.length > 0) {
+          setCustomNodes(data);
+        } else {
+          console.log("No backend custom nodes found, keeping existing local nodes.");
+        }
       } catch (err) {
         console.error("Failed to fetch custom nodes:", err);
-        console.log(BACKEND_URL);
       }
     };
-    fetchNodes();
+
+    // 🛠️ FIX: Wait for Firebase user before fetching
+    const auth = getAuth();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        // Delay slightly to let App.jsx restore localStorage first
+        setTimeout(fetchNodes, 600);
+      } else {
+        setCustomNodes([]); // Clear only on logout
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
+  // =============================
+  // 💾 Save (Add/Edit) custom node
+  // =============================
   const handleSaveCustomNode = async (node) => {
     const nodeWithId = { ...node, id: node.id || `custom_${Date.now()}` };
     try {
-      await fetch(BACKEND_URL+"/nodes", {
+      await fetchWithAuth(`${BACKEND_URL}/nodes`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(nodeWithId),
       });
-      const res = await fetch(BACKEND_URL+"/nodes");
+
+      const res = await fetchWithAuth(`${BACKEND_URL}/nodes`);
       const data = await res.json();
+
       setCustomNodes(data);
       onSaveCustomNode(nodeWithId);
       setShowModal(false);
@@ -49,12 +97,17 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
     }
   };
 
+  // =============================
+  // 🗑️ Delete custom node
+  // =============================
   const handleDelete = async (nodeId) => {
     if (!window.confirm("Are you sure you want to delete this custom node?")) return;
+
     try {
-      await fetch(`${BACKEND_URL}/nodes/${nodeId}`, { method: "DELETE" });
-      const res = await fetch(BACKEND_URL+"/nodes");
+      await fetchWithAuth(`${BACKEND_URL}/nodes/${nodeId}`, { method: "DELETE" });
+      const res = await fetchWithAuth(`${BACKEND_URL}/nodes`);
       const data = await res.json();
+
       setCustomNodes(data);
       onDeleteCustomNode(nodeId);
     } catch (err) {
@@ -62,21 +115,29 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
     }
   };
 
+  // =============================
+  // 🔁 Reset all user’s custom nodes
+  // =============================
   const handleReset = async () => {
     if (!window.confirm("Are you sure you want to reset all custom nodes?")) return;
+
     try {
-      const allNodes = await fetch(BACKEND_URL+"/nodes");
+      const allNodes = await fetchWithAuth(`${BACKEND_URL}/nodes`);
       const data = await allNodes.json();
+
       for (const node of data) {
-        await fetch(`${BACKEND_URL}/nodes/${node.id}`, { method: "DELETE" });
+        await fetchWithAuth(`${BACKEND_URL}/nodes/${node.id}`, { method: "DELETE" });
       }
+
       setCustomNodes([]);
     } catch (err) {
       console.error("Failed to reset custom nodes:", err);
     }
   };
 
-  // Merge default and custom nodes
+  // =============================
+  // 🧩 Merge & Filter Nodes
+  // =============================
   const mergedNodesMap = new Map();
   availableNodes.forEach((n) => mergedNodesMap.set(n.id, n));
   customNodes.forEach((n) => mergedNodesMap.set(n.id, n));
@@ -84,6 +145,9 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
     n.label.toLowerCase().includes(search.toLowerCase())
   );
 
+  // =============================
+  // 🧱 UI
+  // =============================
   return (
     <div
       className="d-flex flex-column"
@@ -110,8 +174,15 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
         >
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="mb-0">Node Palette</h5>
-            <Button size="sm" variant="outline-secondary" onClick={() => setIsCollapsed(!isCollapsed)}>⬅</Button>
+            <Button
+              size="sm"
+              variant="outline-secondary"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+            >
+              ⬅
+            </Button>
           </div>
+
           <style>
             {`
               .form-control::placeholder {
@@ -119,11 +190,11 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
               }
             `}
           </style>
+
           <Form.Control
             type="text"
             className="mb-2"
             placeholder="Search nodes..."
-    
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
@@ -132,7 +203,6 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
               borderColor: themeColors.border,
             }}
           />
-          
         </div>
       )}
 
@@ -171,7 +241,11 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
                     <Button
                       variant={themeColors.buttonVariant}
                       size="sm"
-                      style={{ backgroundColor: themeColors.cardBg, color: themeColors.text, borderColor: themeColors.border }}
+                      style={{
+                        backgroundColor: themeColors.cardBg,
+                        color: themeColors.text,
+                        borderColor: themeColors.border,
+                      }}
                       onClick={() => {
                         setEditNode(node);
                         setShowModal(true);
@@ -179,11 +253,7 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
                     >
                       <FaPen />
                     </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => handleDelete(node.id)}
-                    >
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(node.id)}>
                       <FaTrash />
                     </Button>
                   </div>
@@ -216,11 +286,7 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
           >
             + Create Node
           </Button>
-          <Button
-            variant="danger"
-            className="w-100"
-            onClick={handleReset}
-          >
+          <Button variant="danger" className="w-100" onClick={handleReset}>
             Reset Nodes
           </Button>
         </div>
@@ -228,10 +294,16 @@ export default function Sidebar({ availableNodes, onAddNode, onSaveCustomNode, o
 
       {/* Collapse Button (when collapsed) */}
       {isCollapsed && (
-        <div className="p-2 border-bottom d-flex justify-content-center flex-shrink-0"
-          style={{ borderBottom: `1px solid ${themeColors.border}`, backgroundColor: themeColors.sidebarBg }}
+        <div
+          className="p-2 border-bottom d-flex justify-content-center flex-shrink-0"
+          style={{
+            borderBottom: `1px solid ${themeColors.border}`,
+            backgroundColor: themeColors.sidebarBg,
+          }}
         >
-          <Button size="sm" variant="outline-secondary" onClick={() => setIsCollapsed(false)}>➤</Button>
+          <Button size="sm" variant="outline-secondary" onClick={() => setIsCollapsed(false)}>
+            ➤
+          </Button>
         </div>
       )}
 

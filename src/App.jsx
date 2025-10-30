@@ -34,6 +34,7 @@ export default function App() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [initialized, setInitialized] = useState(false); // ✅ NEW
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState(null);
   const [showNodeDetails, setShowNodeDetails] = useState(true);
@@ -42,25 +43,33 @@ export default function App() {
   const [redoStack, setRedoStack] = useState([]);
   const [copiedNodes, setCopiedNodes] = useState([]);
 
+  // 1️⃣ Load from localStorage once on mount
   useEffect(() => {
     const saved = localStorage.getItem("flowState");
     if (saved) {
-      const { nodes: savedNodes, edges: savedEdges } = JSON.parse(saved);
-      setNodes(savedNodes || []);
-      setEdges(savedEdges || []);
+      try {
+        const { nodes: savedNodes, edges: savedEdges } = JSON.parse(saved);
+        setNodes(savedNodes || []);
+        setEdges(savedEdges || []);
+      } catch (err) {
+        console.error("Failed to parse flowState:", err);
+      }
     }
+    setInitialized(true); // ✅ Only after loading complete
   }, []);
 
+  // 2️⃣ Save only after initialization to avoid overwriting
   useEffect(() => {
+    if (!initialized) return;
     localStorage.setItem("flowState", JSON.stringify({ nodes, edges }));
-  }, [nodes, edges]);
+  }, [nodes, edges, initialized]);
 
   const pushToHistory = (newNodes, newEdges) => {
     setHistory((h) => [...h, { nodes: newNodes, edges: newEdges }]);
     setRedoStack([]);
   };
 
-  // Wrap original addNode to add default width/height
+  // Flow handlers
   const { addNode: baseAddNode, onConnect, deleteNode, deleteEdge } = useFlowHandlers(
     nodes,
     setNodes,
@@ -109,27 +118,26 @@ export default function App() {
     setEdges((eds) =>
       eds.map((e) =>
         e.id === edgeId
-          ? { ...e, data: { ...e.data, [key]: value } } // only data object changes
+          ? { ...e, data: { ...e.data, [key]: value } }
           : e
       )
     );
   };
-
 
   const updateEdgeType = (edgeId, newType) => {
     setEdges((eds) =>
       eds.map((e) =>
         e.id === edgeId
-          ? { ...e, type: "custom", data: { ...e.data, type: newType } } // type always stays 'custom'
+          ? { ...e, type: "custom", data: { ...e.data, type: newType } }
           : e
       )
     );
   };
 
-
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const selectedEdge = edges.find((e) => e.id === selectedEdgeId);
 
+  // 🧠 Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && selectedNodeId) {
@@ -192,7 +200,6 @@ export default function App() {
       try {
         const { nodes: loadedNodes, edges: loadedEdges } = JSON.parse(e.target.result);
         if (loadedNodes && loadedEdges) {
-          // Ensure all loaded nodes have width/height
           const fixedNodes = loadedNodes.map((n) => ({
             ...n,
             width: n.width || DEFAULT_NODE_WIDTH,

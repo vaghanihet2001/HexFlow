@@ -1,2 +1,5 @@
 node_modules/
 install.sh
+serviceAccountKey.json
+.env
+user_nodes
