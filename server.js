@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
-import fs from "fs";
-import path from "path";
 import { fileURLToPath } from "url";
+import path from "path";
 import { createServer as createViteServer } from "vite";
 import { env } from "process";
 import admin from "firebase-admin";
 import dotenv from "dotenv";
+import fs from "fs";
 
 dotenv.config();
 
@@ -28,8 +28,11 @@ if (!admin.apps.length) {
     }
   } catch (err) {
     console.error("❌ Failed to initialize Firebase Admin:", err);
+    process.exit(1);
   }
 }
+
+const db = admin.firestore();
 
 const app = express();
 const PORT = env.BACKEND_PORT || 5173;
@@ -39,12 +42,6 @@ app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const nodesDir = path.join(process.cwd(), "user_nodes");
-
-// Ensure nodes directory exists
-if (!fs.existsSync(nodesDir)) {
-  fs.mkdirSync(nodesDir, { recursive: true });
-}
 
 // ===============================
 // 🔐 Firebase Token Verification Middleware
@@ -67,66 +64,86 @@ const verifyFirebaseToken = async (req, res, next) => {
 };
 
 // ===============================
-// 📁 Helper Functions
+// 🔧 Firestore helpers (subcollection model)
+// Path: users/{uid}/nodes/{nodeId}
 // ===============================
-const getUserFile = (uid) => path.join(nodesDir, `${uid}.json`);
+const nodesCollectionRef = (uid) => db.collection("users").doc(uid).collection("nodes");
 
-const readUserNodes = (uid) => {
-  const filePath = getUserFile(uid);
-  if (!fs.existsSync(filePath)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(filePath, "utf8"));
-  } catch (err) {
-    console.error(`❌ Failed to read nodes for user ${uid}:`, err);
-    return [];
-  }
+/**
+ * List all nodes for a user
+ */
+const listUserNodes = async (uid) => {
+  const colRef = nodesCollectionRef(uid);
+  const snap = await colRef.get();
+  return snap.docs.map((d) => {
+    return { id: d.id, ...d.data() };
+  });
 };
 
-const writeUserNodes = (uid, data) => {
-  const filePath = getUserFile(uid);
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-    console.log(`💾 Saved ${data.length} nodes for user ${uid}`);
-  } catch (err) {
-    console.error(`❌ Failed to write nodes for user ${uid}:`, err);
-  }
+/**
+ * Upsert a single node as a document with id = node.id
+ */
+const upsertNodeDoc = async (uid, node) => {
+  if (!node.id) throw new Error("Node must have an id");
+  const docRef = nodesCollectionRef(uid).doc(node.id);
+  await docRef.set(node, { merge: true }); // merge to avoid overwriting server-side fields if added later
+  const saved = await docRef.get();
+  return { id: saved.id, ...saved.data() };
+};
+
+/**
+ * Delete a node document
+ */
+const deleteNodeDoc = async (uid, nodeId) => {
+  const docRef = nodesCollectionRef(uid).doc(nodeId);
+  await docRef.delete();
 };
 
 // ===============================
-// 🚀 API ROUTES (Per-user storage)
+// 🚀 API ROUTES
 // ===============================
-app.get("/nodes", verifyFirebaseToken, (req, res) => {
+app.get("/nodes", verifyFirebaseToken, async (req, res) => {
   const uid = req.user.uid;
-  const nodes = readUserNodes(uid);
-  res.json(nodes);
+  try {
+    const nodes = await listUserNodes(uid);
+    res.json(nodes);
+  } catch (err) {
+    console.error(`❌ Failed to list nodes for ${uid}:`, err);
+    res.status(500).json({ error: "Failed to fetch nodes" });
+  }
 });
 
-app.post("/nodes", verifyFirebaseToken, (req, res) => {
+app.post("/nodes", verifyFirebaseToken, async (req, res) => {
   const uid = req.user.uid;
   const newNode = req.body;
+  if (!newNode || !newNode.id) return res.status(400).json({ error: "Node must have an id" });
 
-  const nodes = readUserNodes(uid);
-  const index = nodes.findIndex((n) => n.id === newNode.id);
-  if (index !== -1) nodes[index] = newNode;
-  else nodes.push(newNode);
-
-  writeUserNodes(uid, nodes);
-  res.json({ success: true, nodes });
+  try {
+    const saved = await upsertNodeDoc(uid, newNode);
+    res.json({ success: true, node: saved });
+  } catch (err) {
+    console.error(`❌ Failed to save node for ${uid}:`, err);
+    res.status(500).json({ error: "Failed to save node" });
+  }
 });
 
-app.delete("/nodes/:id", verifyFirebaseToken, (req, res) => {
+app.delete("/nodes/:id", verifyFirebaseToken, async (req, res) => {
   const uid = req.user.uid;
   const nodeId = req.params.id;
-
-  let nodes = readUserNodes(uid);
-  nodes = nodes.filter((n) => n.id !== nodeId);
-
-  writeUserNodes(uid, nodes);
-  res.json({ success: true });
+  try {
+    await deleteNodeDoc(uid, nodeId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(`❌ Failed to delete node ${nodeId} for ${uid}:`, err);
+    res.status(500).json({ error: "Failed to delete node" });
+  }
 });
 
+// health
+app.get("/healthz", (req, res) => res.json({ ok: true }));
+
 // ===============================
-// 🧩 Vite Dev + API Server
+// 🧩 Vite Dev + API Server (no migration)
 // ===============================
 const startServer = async () => {
   const vite = await createViteServer({

@@ -23,13 +23,13 @@ export const lightTheme = {
   hoverBg: "#e9ecef",
 
   // 🔵 Added for better UI consistency
-  primary: "#4f46e5",
-  accent: "#6366f1",
+  primary: "#0066CC",
+  accent: "#33CCFF",
   link: "#4f8cff",
   error: "#ff4d4d",
   googleBtnBg: "#ffffff",
   googleBtnText: "#333333",
-  shadow: "rgba(0, 0, 0, 0.15)",
+  shadow: "rgba(22, 10, 122, 0.50)",
 };
 
 
@@ -53,13 +53,13 @@ export const darkTheme = {
   hoverBg: "#3a3a3a",
 
   // 🟣 Added theme-aware properties for login and UI cards
-  primary: "#6366f1",
-  accent: "#818cf8",
+  primary: "#0066CC",
+  accent: "#33CCFF",
   link: "#4f8cff",
   error: "#ff6b6b",
   googleBtnBg: "#3a3a4f",
   googleBtnText: "#f5f5f5",
-  shadow: "rgba(0, 0, 0, 0.4)",
+  shadow: "rgba(22, 10, 122, 0.50)",
 };
 
 
