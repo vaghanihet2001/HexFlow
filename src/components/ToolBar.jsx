@@ -9,16 +9,43 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
   const { theme, themeColors } = useTheme();
 
   // --- File / Graph Handlers ---
-  const handleSave = () => {
+  const handleSave = async () => {
     const graph = { nodes, edges };
-    const blob = new Blob([JSON.stringify(graph, null, 2)], { type: "application/json" });
+    const json = JSON.stringify(graph, null, 2);
+
+    try {
+      // Check browser support
+      if ("showSaveFilePicker" in window) {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: "graph.json",
+          types: [
+            {
+              description: "JSON File",
+              accept: { "application/json": [".json"] },
+            },
+          ],
+        });
+
+        const writable = await handle.createWritable();
+        await writable.write(json);
+        await writable.close();
+
+        return; // done
+      }
+    } catch (err) {
+      console.error("Native save dialog failed:", err);
+    }
+
+    // fallback for unsupported browsers
+    const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "graph.json";
+    a.download = "graph.json"; // fallback
     a.click();
     URL.revokeObjectURL(url);
   };
+
 
   const handleLoad = (event) => {
     const file = event.target.files[0];
