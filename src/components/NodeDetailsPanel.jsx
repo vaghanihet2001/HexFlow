@@ -1,8 +1,11 @@
 // src/components/NodeDetailsPanel.jsx
 import React from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
 import { useTheme } from "./ThemeContext";
-import { FaEye, FaEyeSlash ,FaWindowClose } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaWindowClose } from "react-icons/fa";
+
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "../css/datepicker-theme.css";
 
 export default function NodeDetailsPanel({
   node,
@@ -22,106 +25,106 @@ export default function NodeDetailsPanel({
 
   const toggleAllFields = () => {
     const anyVisible = node.data.fields.some((f) => !f.hide);
-    node.data.fields.forEach((f) => {
-      updateNodeField(node.id, f.id, "hide", anyVisible); // hide all if any visible, else unhide all
-    });
+    node.data.fields.forEach((f) =>
+      updateNodeField(node.id, f.id, "hide", anyVisible)
+    );
   };
 
   return (
     <div
       className="d-flex flex-column border-start"
       style={{
-        width: "250px",
-        height: "100vh",
+        width: "260px",
         backgroundColor: themeColors.sidebarBg,
         color: themeColors.text,
         borderColor: themeColors.border,
+
+        // 🔥 Inject theme variables used by datepicker-theme.css
+        "--dp-bg": themeColors.background,
+        "--dp-text": themeColors.text,
+        "--dp-border": themeColors.border,
       }}
     >
-      {/* Top Header */}
+      {/* Header */}
       <div
-        className="flex-shrink-0 p-3 border-bottom d-flex justify-content-between align-items-center"
+        className="p-3 border-bottom d-flex justify-content-between align-items-center"
         style={{ borderColor: themeColors.border }}
       >
         <h5 className="mb-0">Node Details</h5>
+
         <button
-          style={{
-            border: "none",
-            background: "transparent",
-            fontSize: "18px",
-            cursor: "pointer",
-            color: themeColors.text,
-          }}
           onClick={onClosePanel}
+          style={{
+            background: "transparent",
+            border: "none",
+            fontSize: "22px",
+            color: themeColors.text,
+            cursor: "pointer",
+          }}
         >
-          <FaWindowClose/>
-
+          <FaWindowClose />
         </button>
       </div>
 
-      {/* Hide/Unhide All Fields Button */}
+      {/* Hide/Unhide All */}
       <div className="p-3 border-bottom">
-        <button
-          className="btn btn-outline-primary w-100"
-          onClick={toggleAllFields}
-        >
-          {node.data.fields.some((f) => !f.hide) ? "Hide All Fields" : "Unhide All Fields"}
+        <button className="btn btn-outline-primary w-100" onClick={toggleAllFields}>
+          {node.data.fields.some((f) => !f.hide)
+            ? "Hide All Fields"
+            : "Unhide All Fields"}
         </button>
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-grow-1 overflow-auto p-3" style={{ minHeight: 0 }}>
-        {/* Node Label */}
+      {/* Scrollable Body */}
+      <div className="flex-grow-1 overflow-auto p-3">
+        {/* Label */}
         <div className="mb-3">
-          <label className="form-label">Label:</label>
+          <label style={{ color: themeColors.text }}>Label</label>
           <input
-            type="text"
             className="form-control"
+            value={node.data.label}
+            onChange={(e) => updateNodeData(node.id, "label", e.target.value)}
             style={{
               backgroundColor: themeColors.cardBg,
               color: themeColors.text,
               borderColor: themeColors.border,
             }}
-            value={node.data.label}
-            onChange={(e) => updateNodeData(node.id, "label", e.target.value)}
           />
         </div>
 
-        {/* Node Color Picker */}
+        {/* Color */}
         <div className="mb-3">
-          <label className="form-label">Color:</label>
+          <label style={{ color: themeColors.text }}>Color</label>
           <input
             type="color"
             className="form-control form-control-color"
-            value={node.data.color || "#ffffff"}
+            value={node.data.color}
             onChange={(e) => updateNodeData(node.id, "color", e.target.value)}
             style={{
               padding: 0,
-              height: "35px",
-              border: `1px solid ${themeColors.border}`,
-              backgroundColor: node.data.color || "#ffffff",
-              cursor: "pointer",
+              height: "38px",
+              borderColor: themeColors.border,
             }}
           />
         </div>
 
-        {/* Custom Fields */}
-        {node.data.fields?.map((field) => (
+        {/* FIELDS */}
+        {node.data.fields.map((field) => (
           <div
             key={field.id}
-            className="mb-3 border rounded p-2"
+            className="border rounded p-2 mb-3"
             style={{
               backgroundColor: themeColors.cardBg,
               borderColor: themeColors.border,
               color: themeColors.text,
             }}
           >
-            <div className="d-flex justify-content-between align-items-center mb-1">
-              <label className="form-label mb-0">{field.label}</label>
+            <div className="d-flex justify-content-between mb-1">
+              <label style={{ color: themeColors.text }}>{field.label}</label>
+
               <button
                 className="btn btn-sm btn-outline-secondary"
                 onClick={() => toggleFieldVisibility(field.id)}
-                title={field.hide ? "Show Field" : "Hide Field"}
               >
                 {field.hide ? <FaEyeSlash /> : <FaEye />}
               </button>
@@ -131,14 +134,13 @@ export default function NodeDetailsPanel({
               <>
                 {field.type === "text" && (
                   <input
-                    type="text"
                     className="form-control"
                     style={{
                       backgroundColor: themeColors.background,
                       color: themeColors.text,
                       borderColor: themeColors.border,
                     }}
-                    value={field.value || ""}
+                    value={field.value}
                     onChange={(e) =>
                       updateNodeField(node.id, field.id, "value", e.target.value)
                     }
@@ -148,95 +150,180 @@ export default function NodeDetailsPanel({
                 {field.type === "dropdown" && (
                   <select
                     className="form-select"
+                    value={field.value}
+                    onChange={(e) =>
+                      updateNodeField(node.id, field.id, "value", e.target.value)
+                    }
                     style={{
                       backgroundColor: themeColors.background,
                       color: themeColors.text,
                       borderColor: themeColors.border,
                     }}
-                    value={field.value || ""}
-                    onChange={(e) =>
-                      updateNodeField(node.id, field.id, "value", e.target.value)
-                    }
                   >
-                    {field.options?.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
+                    {field.options.map((o) => (
+                      <option key={o}>{o}</option>
                     ))}
                   </select>
                 )}
 
                 {field.type === "radio" &&
-                  field.options?.map((opt) => (
-                    <div className="form-check" key={opt}>
+                  field.options.map((o) => (
+                    <div key={o} className="form-check">
                       <input
-                        className="form-check-input"
                         type="radio"
-                        name={field.id}
-                        value={opt}
-                        checked={field.value === opt}
+                        className="form-check-input"
+                        checked={field.value === o}
                         onChange={() =>
-                          updateNodeField(node.id, field.id, "value", opt)
+                          updateNodeField(node.id, field.id, "value", o)
                         }
-                        style={{
-                          borderColor: themeColors.border,
-                        }}
                       />
-                      <label
-                        className="form-check-label"
-                        style={{ color: themeColors.text }}
-                      >
-                        {opt}
+                      <label className="form-check-label" style={{ color: themeColors.text }}>
+                        {o}
                       </label>
                     </div>
                   ))}
 
                 {field.type === "checkbox" &&
-                  field.options?.map((opt) => (
-                    <div className="form-check" key={opt}>
+                  field.options.map((o) => (
+                    <div key={o} className="form-check">
                       <input
-                        className="form-check-input"
                         type="checkbox"
-                        checked={field.value?.includes(opt)}
+                        className="form-check-input"
+                        checked={field.value?.includes(o)}
                         onChange={(e) => {
-                          let newValue = field.value || [];
-                          if (e.target.checked) newValue = [...newValue, opt];
-                          else newValue = newValue.filter((v) => v !== opt);
-                          updateNodeField(node.id, field.id, "value", newValue);
-                        }}
-                        style={{
-                          borderColor: themeColors.border,
+                          let v = [...(field.value || [])];
+                          if (e.target.checked) v.push(o);
+                          else v = v.filter((x) => x !== o);
+                          updateNodeField(node.id, field.id, "value", v);
                         }}
                       />
-                      <label
-                        className="form-check-label"
-                        style={{ color: themeColors.text }}
-                      >
-                        {opt}
+                      <label className="form-check-label" style={{ color: themeColors.text }}>
+                        {o}
                       </label>
                     </div>
                   ))}
+
+                {field.type === "number" && (
+                  <>
+                    <label style={{ color: themeColors.text }}>Value</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={field.value}
+                      onChange={(e) =>
+                        updateNodeField(
+                          node.id,
+                          field.id,
+                          "value",
+                          field.numberType === "int"
+                            ? parseInt(e.target.value)
+                            : parseFloat(e.target.value)
+                        )
+                      }
+                      style={{
+                        backgroundColor: themeColors.background,
+                        color: themeColors.text,
+                        borderColor: themeColors.border,
+                      }}
+                    />
+
+                    <label className="mt-2" style={{ color: themeColors.text }}>Min</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={field.min}
+                      onChange={(e) =>
+                        updateNodeField(node.id, field.id, "min", Number(e.target.value))
+                      }
+                      style={{
+                        backgroundColor: themeColors.background,
+                        color: themeColors.text,
+                        borderColor: themeColors.border,
+                      }}
+                    />
+
+                    <label className="mt-2" style={{ color: themeColors.text }}>Max</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={field.max}
+                      onChange={(e) =>
+                        updateNodeField(node.id, field.id, "max", Number(e.target.value))
+                      }
+                      style={{
+                        backgroundColor: themeColors.background,
+                        color: themeColors.text,
+                        borderColor: themeColors.border,
+                      }}
+                    />
+
+                    <label className="mt-2" style={{ color: themeColors.text }}>
+                      Number Type
+                    </label>
+                    <select
+                      className="form-select"
+                      value={field.numberType}
+                      onChange={(e) =>
+                        updateNodeField(node.id, field.id, "numberType", e.target.value)
+                      }
+                      style={{
+                        backgroundColor: themeColors.background,
+                        color: themeColors.text,
+                        borderColor: themeColors.border,
+                      }}
+                    >
+                      <option value="int">Integer</option>
+                      <option value="float">Float</option>
+                    </select>
+                  </>
+                )}
+
+                {/* DATE */}
+                {field.type === "date" && (
+                  <>
+                    <label style={{ color: themeColors.text }}>Date</label>
+                    <DatePicker
+                      selected={field.value ? new Date(field.value) : null}
+                      onChange={(date) =>
+                        updateNodeField(
+                          node.id,
+                          field.id,
+                          "value",
+                          date?.toISOString().split("T")[0]
+                        )
+                      }
+                      className="form-control"
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="Select date"
+                    />
+                  </>
+                )}
+
+                {/* DATETIME */}
+                {field.type === "datetime" && (
+                  <>
+                    <label style={{ color: themeColors.text }}>Date & Time</label>
+                    <DatePicker
+                      selected={field.value ? new Date(field.value) : null}
+                      onChange={(date) =>
+                        updateNodeField(node.id, field.id, "value", date?.toISOString())
+                      }
+                      showTimeSelect
+                      timeIntervals={5}
+                      dateFormat="yyyy-MM-dd HH:mm"
+                      className="form-control"
+                      placeholderText="Select date & time"
+                    />
+                  </>
+                )}
               </>
             )}
           </div>
         ))}
       </div>
 
-      {/* Delete Button */}
-      <div
-        className="flex-shrink-0 p-3 border-top"
-        style={{
-          position: "sticky",
-          bottom: 0,
-          backgroundColor: themeColors.sidebarBg,
-          borderColor: themeColors.border,
-          zIndex: 10,
-        }}
-      >
-        <button
-          className="btn btn-danger w-100"
-          onClick={() => deleteNode(node.id)}
-        >
+      <div className="p-3 border-top">
+        <button className="btn btn-danger w-100" onClick={() => deleteNode(node.id)}>
           Delete Node
         </button>
       </div>

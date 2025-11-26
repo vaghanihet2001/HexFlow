@@ -104,7 +104,8 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
   // =============================
   // 🖼 EXPORT IMAGE
   // =============================
-  const handleExportImage = () => {
+
+  const handleExportImage = async () => {
     const el = document.querySelector(".react-flow");
     if (!el)
       return setModal({
@@ -118,6 +119,7 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
     const width = el.scrollWidth;
     const height = el.scrollHeight;
 
+    // Clone node for clean rendering
     const clone = el.cloneNode(true);
     clone.style.transform = "scale(1)";
     clone.style.transformOrigin = "top left";
@@ -127,31 +129,62 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
 
     document.body.appendChild(clone);
 
-    htmlToImage
-      .toPng(clone, {
+    try {
+      const dataUrl = await htmlToImage.toPng(clone, {
         width,
         height,
         style: { background: themeColors.background },
-      })
-      .then((dataUrl) => {
-        const a = document.createElement("a");
-        a.href = dataUrl;
-        a.download = "graph.png";
-        a.click();
-        document.body.removeChild(clone);
-      })
-      .catch((err) => {
-        console.error("Export failed:", err);
-        setModal({
-          show: true,
-          type: "error",
-          title: "Export Failed",
-          message: "Unable to export graph image.",
-          confirmText: "Close",
-        });
-        document.body.removeChild(clone);
       });
+
+      document.body.removeChild(clone);
+
+      // If browser supports file picker — use it
+      if ("showSaveFilePicker" in window) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: "graph.png",
+            types: [
+              {
+                description: "PNG Image",
+                accept: { "image/png": [".png"] },
+              },
+            ],
+          });
+
+          const writable = await handle.createWritable();
+          const blob = await (await fetch(dataUrl)).blob();
+
+          await writable.write(blob);
+          await writable.close();
+          return;
+        } catch (err) {
+          if (err.name === "AbortError" || err.name === "NotAllowedError") {
+            console.log("Save canceled");
+            return;
+          }
+          console.error("Save File Dialog failed:", err);
+        }
+      }
+
+      // Otherwise fallback auto-download
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = "graph.png";
+      a.click();
+
+    } catch (err) {
+      console.error("Export failed:", err);
+      setModal({
+        show: true,
+        type: "error",
+        title: "Export Failed",
+        message: "Unable to export graph image.",
+        confirmText: "Close",
+      });
+      document.body.removeChild(clone);
+    }
   };
+
 
   return (
     <>
@@ -197,6 +230,7 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
           variant={theme === "light" ? "info" : "secondary"}
           size="sm"
           menuVariant={theme === "light" ? "light" : "dark"}
+
         >
           <Dropdown.Header>Keyboard Shortcuts</Dropdown.Header>
           <Dropdown.Item disabled>Ctrl + C → Copy Node</Dropdown.Item>

@@ -23,8 +23,9 @@ export default function Sidebar({
 
   const [loadingNodes, setLoadingNodes] = useState(true);
 
-  // 🔥 Global AppModal state
+  // 🔥 Global AppModal states
   const [confirmResetModal, setConfirmResetModal] = useState({ show: false });
+  const [confirmDeleteNodeModal, setConfirmDeleteNodeModal] = useState({ show: false }); // ⭐ NEW
 
   const { themeColors } = useTheme();
 
@@ -80,7 +81,7 @@ export default function Sidebar({
   }, []);
 
   // ========================================
-  // 💾 Save custom node (duplicate fix)
+  // 💾 Save custom node
   // ========================================
   const handleSaveCustomNode = async (node) => {
     const nodeWithId = {
@@ -88,7 +89,7 @@ export default function Sidebar({
       id: node.id || `custom_${Date.now()}`,
     };
 
-    // 🚀 FIX: Ignore the current node when checking duplicates
+    // Duplicate label check ignoring current node
     if (
       customNodes.some(
         (n) =>
@@ -122,11 +123,21 @@ export default function Sidebar({
   };
 
   // ========================================
-  // 🗑 Delete node
+  // 🗑 Delete node (AppModal version)
   // ========================================
-  const handleDelete = async (nodeId) => {
-    if (!window.confirm("Delete this custom node?")) return;
+  const openConfirmDeleteNode = (nodeId) => {
+    setConfirmDeleteNodeModal({
+      show: true,
+      title: "Delete Node?",
+      message: "This will permanently remove this custom node.",
+      type: "confirm",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: () => handleDelete(nodeId), // confirm action
+    });
+  };
 
+  const handleDelete = async (nodeId) => {
     try {
       setLoadingNodes(true);
 
@@ -137,6 +148,7 @@ export default function Sidebar({
 
       setCustomNodes(data);
       onDeleteCustomNode(nodeId);
+      setConfirmDeleteNodeModal({ show: false }); // close modal
     } catch (err) {
       console.error("Failed to delete custom node:", err);
     } finally {
@@ -145,7 +157,7 @@ export default function Sidebar({
   };
 
   // ========================================
-  // Reset nodes → Use AppModal
+  // Reset nodes → AppModal
   // ========================================
   const openResetConfirm = () => {
     setConfirmResetModal({
@@ -190,7 +202,7 @@ export default function Sidebar({
   };
 
   // ========================================
-  // Merge nodes
+  // Merge built-in + custom nodes
   // ========================================
   const mergedNodesMap = new Map();
   availableNodes.forEach((n) => mergedNodesMap.set(n.id, n));
@@ -201,7 +213,7 @@ export default function Sidebar({
   );
 
   // ========================================
-  // Skeleton item
+  // Skeleton loader
   // ========================================
   const SkeletonItem = () => (
     <div
@@ -316,10 +328,7 @@ export default function Sidebar({
         {!isCollapsed && (
           <div
             className="flex-grow-1 px-3 py-2"
-            style={{
-              overflowY: "auto",
-              overflowX: "hidden",
-            }}
+            style={{ overflowY: "auto", overflowX: "hidden" }}
           >
             {loadingNodes ? (
               <div className="d-flex flex-column gap-2">
@@ -377,7 +386,7 @@ export default function Sidebar({
                         <Button
                           variant="danger"
                           size="sm"
-                          onClick={() => handleDelete(node.id)}
+                          onClick={() => openConfirmDeleteNode(node.id)} // ⭐ replaced alert()
                         >
                           <FaTrash />
                         </Button>
@@ -390,7 +399,7 @@ export default function Sidebar({
           </div>
         )}
 
-        {/* Bottom */}
+        {/* Bottom Panel */}
         {!isCollapsed && !loadingNodes && (
           <div
             className="flex-shrink-0 p-3"
@@ -415,12 +424,17 @@ export default function Sidebar({
             <Button variant="danger" className="w-100" onClick={openResetConfirm}>
               Remove Nodes
             </Button>
-            
 
-            <footer style={{ fontSize: "0.75rem", marginTop: "10px", textAlign: "center", color: themeColors.subtleText }}>
-                © 2025 HexFlow by HexVerce
+            <footer
+              style={{
+                fontSize: "0.75rem",
+                marginTop: "10px",
+                textAlign: "center",
+                color: themeColors.subtleText,
+              }}
+            >
+              © 2025 HexFlow by HexVerce
             </footer>
-
           </div>
         )}
 
@@ -432,6 +446,7 @@ export default function Sidebar({
           editingNode={editNode}
         />
 
+        {/* Reset All Custom Nodes */}
         <AppModal
           show={confirmResetModal.show}
           title={confirmResetModal.title}
@@ -441,6 +456,18 @@ export default function Sidebar({
           cancelText={confirmResetModal.cancelText}
           onConfirm={confirmResetModal.onConfirm}
           onClose={() => setConfirmResetModal({ show: false })}
+        />
+
+        {/* NEW: Delete Individual Node */}
+        <AppModal
+          show={confirmDeleteNodeModal.show}
+          title={confirmDeleteNodeModal.title}
+          message={confirmDeleteNodeModal.message}
+          type={confirmDeleteNodeModal.type}
+          confirmText={confirmDeleteNodeModal.confirmText}
+          cancelText={confirmDeleteNodeModal.cancelText}
+          onConfirm={confirmDeleteNodeModal.onConfirm}
+          onClose={() => setConfirmDeleteNodeModal({ show: false })}
         />
       </div>
     </>

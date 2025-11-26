@@ -40,3 +40,9 @@ body {
   scrollbar-width: thin;
   scrollbar-color: var(--scroll-primary) transparent;
 }
+
+
+/* Force dropdown menus to stay on top */
+.dropdown-menu {
+  z-index: 10000 !important;
+}
