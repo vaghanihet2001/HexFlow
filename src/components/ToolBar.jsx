@@ -9,42 +9,51 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
   const { theme, themeColors } = useTheme();
 
   // --- File / Graph Handlers ---
-  const handleSave = async () => {
-    const graph = { nodes, edges };
-    const json = JSON.stringify(graph, null, 2);
+const handleSave = async () => {
+  const graph = { nodes, edges };
+  const json = JSON.stringify(graph, null, 2);
 
+  // Try Native Save-As Dialog
+  if ("showSaveFilePicker" in window) {
     try {
-      // Check browser support
-      if ("showSaveFilePicker" in window) {
-        const handle = await window.showSaveFilePicker({
-          suggestedName: "graph.json",
-          types: [
-            {
-              description: "JSON File",
-              accept: { "application/json": [".json"] },
-            },
-          ],
-        });
+      const handle = await window.showSaveFilePicker({
+        suggestedName: "graph.json",
+        types: [
+          {
+            description: "JSON File",
+            accept: { "application/json": [".json"] },
+          },
+        ],
+      });
 
-        const writable = await handle.createWritable();
-        await writable.write(json);
-        await writable.close();
-
-        return; // done
-      }
+      const writable = await handle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      return; // SUCCESS → STOP HERE
     } catch (err) {
-      console.error("Native save dialog failed:", err);
-    }
+      // 🛑 USER PRESSED CANCEL → STOP
+      if (err.name === "AbortError" || err.name === "NotAllowedError") {
+        console.log("Save canceled by user.");
+        return;
+      }
 
-    // fallback for unsupported browsers
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "graph.json"; // fallback
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+      console.error("Save dialog failed:", err);
+      // Any other error → fallback
+    }
+  }
+
+  // ⭐ Fallback for unsupported browsers (Chrome OK, Firefox/Safari fallback)
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "graph.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+};
+
 
 
   const handleLoad = (event) => {
