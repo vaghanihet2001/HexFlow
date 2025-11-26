@@ -6,7 +6,6 @@ WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-COPY user_nodes/ ./user_nodes/
 COPY serviceAccountKey.json ./
 RUN npm install
 

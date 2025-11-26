@@ -142,6 +142,14 @@ app.delete("/nodes/:id", verifyFirebaseToken, async (req, res) => {
 // health
 app.get("/healthz", (req, res) => res.json({ ok: true }));
 
+
+// ===============================
+// 🔔 API Ping Endpoint
+// ===============================
+app.get("/ping", (req, res) => {
+  res.status(200).json({ alive: true, time: Date.now() });
+});
+
 // ===============================
 // 🧩 Vite Dev + API Server (no migration)
 // ===============================

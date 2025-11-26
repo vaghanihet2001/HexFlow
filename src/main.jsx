@@ -7,6 +7,22 @@ import { ThemeProvider } from "./components/ThemeContext";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import LoginPage from "./pages/LoginPage";
 
+// ==========================
+// 🔔 EARLY BACKEND WAKE CALL
+// ==========================
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+(async () => {
+  try {
+    await fetch(`${BACKEND_URL}/ping`);
+    console.log("Backend pinged early.");
+  } catch (err) {
+    console.error("Early ping failed:", err);
+  }
+})();
+// ==========================
+
+
 function AppWithAuth() {
   const { user, loading } = useAuth();
 
