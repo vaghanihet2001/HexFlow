@@ -2,7 +2,7 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useTheme } from "./ThemeContext";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash ,FaWindowClose } from "react-icons/fa";
 
 export default function NodeDetailsPanel({
   node,
@@ -54,7 +54,8 @@ export default function NodeDetailsPanel({
           }}
           onClick={onClosePanel}
         >
-          ×
+          <FaWindowClose/>
+
         </button>
       </div>
 

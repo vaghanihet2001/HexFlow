@@ -1,61 +1,64 @@
 // src/components/Toolbar.jsx
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Button, Dropdown, DropdownButton } from "react-bootstrap";
 import * as htmlToImage from "html-to-image";
 import { useTheme } from "./ThemeContext";
+import AppModal from "./AppModal";
 
 export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
   const fileInputRef = useRef();
   const { theme, themeColors } = useTheme();
 
-  // --- File / Graph Handlers ---
-const handleSave = async () => {
-  const graph = { nodes, edges };
-  const json = JSON.stringify(graph, null, 2);
+  // 🔥 State for custom confirmation modal
+  const [modal, setModal] = useState({ show: false });
 
-  // Try Native Save-As Dialog
-  if ("showSaveFilePicker" in window) {
-    try {
-      const handle = await window.showSaveFilePicker({
-        suggestedName: "graph.json",
-        types: [
-          {
-            description: "JSON File",
-            accept: { "application/json": [".json"] },
-          },
-        ],
-      });
+  // =============================
+  // 📁 SAVE GRAPH
+  // =============================
+  const handleSave = async () => {
+    const graph = { nodes, edges };
+    const json = JSON.stringify(graph, null, 2);
 
-      const writable = await handle.createWritable();
-      await writable.write(json);
-      await writable.close();
-      return; // SUCCESS → STOP HERE
-    } catch (err) {
-      // 🛑 USER PRESSED CANCEL → STOP
-      if (err.name === "AbortError" || err.name === "NotAllowedError") {
-        console.log("Save canceled by user.");
+    if ("showSaveFilePicker" in window) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: "graph.json",
+          types: [
+            {
+              description: "JSON File",
+              accept: { "application/json": [".json"] },
+            },
+          ],
+        });
+
+        const writable = await handle.createWritable();
+        await writable.write(json);
+        await writable.close();
         return;
+      } catch (err) {
+        if (err.name === "AbortError" || err.name === "NotAllowedError") {
+          console.log("Save canceled");
+          return;
+        }
+        console.error("Save dialog failed:", err);
       }
-
-      console.error("Save dialog failed:", err);
-      // Any other error → fallback
     }
-  }
 
-  // ⭐ Fallback for unsupported browsers (Chrome OK, Firefox/Safari fallback)
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
+    // Fallback download
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "graph.json";
-  a.click();
+    a.href = url;
+    a.download = "graph.json";
+    a.click();
 
-  URL.revokeObjectURL(url);
-};
+    URL.revokeObjectURL(url);
+  };
 
-
-
+  // =============================
+  // 📂 LOAD GRAPH
+  // =============================
   const handleLoad = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -67,22 +70,50 @@ const handleSave = async () => {
         setNodes(graph.nodes || []);
         setEdges(graph.edges || []);
       } catch (err) {
-        alert("Invalid graph JSON");
+        setModal({
+          show: true,
+          title: "Invalid JSON",
+          message: "The selected file is not a valid graph file.",
+          type: "error",
+          confirmText: "Close",
+        });
       }
     };
     reader.readAsText(file);
   };
 
-  const handleNew = () => {
-    if (window.confirm("Are you sure you want to start a new graph? Unsaved changes will be lost.")) {
-      setNodes([]);
-      setEdges([]);
-    }
+  // =============================
+  // 🆕 CREATE NEW GRAPH (Show Modal)
+  // =============================
+  const confirmNewGraph = () => {
+    setModal({
+      show: true,
+      type: "confirm",
+      title: "Start New Graph?",
+      message: "All unsaved changes will be lost. Continue?",
+      confirmText: "Yes, Start New",
+      cancelText: "Cancel",
+      onConfirm: () => {
+        setNodes([]);
+        setEdges([]);
+        setModal({ show: false });
+      },
+    });
   };
 
+  // =============================
+  // 🖼 EXPORT IMAGE
+  // =============================
   const handleExportImage = () => {
     const el = document.querySelector(".react-flow");
-    if (!el) return alert("ReactFlow container not found!");
+    if (!el)
+      return setModal({
+        show: true,
+        title: "Export Failed",
+        message: "ReactFlow container not found!",
+        type: "error",
+        confirmText: "Close",
+      });
 
     const width = el.scrollWidth;
     const height = el.scrollHeight;
@@ -97,7 +128,11 @@ const handleSave = async () => {
     document.body.appendChild(clone);
 
     htmlToImage
-      .toPng(clone, { width, height, style: { background: themeColors.background } })
+      .toPng(clone, {
+        width,
+        height,
+        style: { background: themeColors.background },
+      })
       .then((dataUrl) => {
         const a = document.createElement("a");
         a.href = dataUrl;
@@ -106,63 +141,83 @@ const handleSave = async () => {
         document.body.removeChild(clone);
       })
       .catch((err) => {
-        console.error("Failed to export image:", err);
+        console.error("Export failed:", err);
+        setModal({
+          show: true,
+          type: "error",
+          title: "Export Failed",
+          message: "Unable to export graph image.",
+          confirmText: "Close",
+        });
         document.body.removeChild(clone);
       });
   };
 
   return (
-    <div
-      className="d-flex align-items-center gap-2 p-2 border-bottom"
-      style={{
-        backgroundColor: themeColors.toolbarBg,
-        borderColor: themeColors.border,
-        color: themeColors.text,
-      }}
-    >
-      {/* File Menu */}
-      <DropdownButton
-        id="dropdown-file"
-        title="File"
-        variant={theme === "light" ? "secondary" : "dark"}
-        size="sm"
-        menuVariant={theme === "light" ? "light" : "dark"}
+    <>
+      <div
+        className="d-flex align-items-center gap-2 p-2 border-bottom"
+        style={{
+          backgroundColor: themeColors.toolbarBg,
+          borderColor: themeColors.border,
+          color: themeColors.text,
+        }}
       >
-        <Dropdown.Item onClick={handleNew}>New</Dropdown.Item>
-        <Dropdown.Item onClick={handleSave}>Save</Dropdown.Item>
-        <Dropdown.Item onClick={() => fileInputRef.current.click()}>Load</Dropdown.Item>
-        <Dropdown.Item onClick={handleExportImage}>Export as Image</Dropdown.Item>
-      </DropdownButton>
+        {/* File Menu */}
+        <DropdownButton
+          id="dropdown-file"
+          title="File"
+          variant={theme === "light" ? "secondary" : "dark"}
+          size="sm"
+          menuVariant={theme === "light" ? "light" : "dark"}
+        >
+          <Dropdown.Item onClick={confirmNewGraph}>New</Dropdown.Item>
+          <Dropdown.Item onClick={handleSave}>Save</Dropdown.Item>
+          <Dropdown.Item onClick={() => fileInputRef.current.click()}>
+            Load
+          </Dropdown.Item>
+          <Dropdown.Item onClick={handleExportImage}>
+            Export as Image
+          </Dropdown.Item>
+        </DropdownButton>
 
-      {/* Hidden file input for loading */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        style={{ display: "none" }}
-        accept=".json"
-        onChange={handleLoad}
+        {/* Hidden file input for loading */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          accept=".json"
+          onChange={handleLoad}
+        />
+
+        {/* Help Menu */}
+        <DropdownButton
+          id="dropdown-help"
+          title="Help / Shortcuts"
+          variant={theme === "light" ? "info" : "secondary"}
+          size="sm"
+          menuVariant={theme === "light" ? "light" : "dark"}
+        >
+          <Dropdown.Header>Keyboard Shortcuts</Dropdown.Header>
+          <Dropdown.Item disabled>Ctrl + C → Copy Node</Dropdown.Item>
+          <Dropdown.Item disabled>Ctrl + V → Paste Node</Dropdown.Item>
+          <Dropdown.Item disabled>Delete → Delete Node/Edge</Dropdown.Item>
+          <Dropdown.Item disabled>Ctrl + Z → Undo</Dropdown.Item>
+          <Dropdown.Item disabled>Ctrl + Shift + Z → Redo</Dropdown.Item>
+        </DropdownButton>
+      </div>
+
+      {/* Global App Modal */}
+      <AppModal
+        show={modal.show}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        confirmText={modal.confirmText}
+        cancelText={modal.cancelText}
+        onConfirm={modal.onConfirm}
+        onClose={() => setModal({ show: false })}
       />
-
-      {/* Shortcuts / Help Menu */}
-      <DropdownButton
-        id="dropdown-help"
-        title="Help / Shortcuts"
-        variant={theme === "light" ? "info" : "secondary"}
-        size="sm"
-        menuVariant={theme === "light" ? "light" : "dark"}
-      >
-        <Dropdown.Header>Keyboard Shortcuts</Dropdown.Header>
-        <Dropdown.Item disabled>Ctrl + C → Copy Node</Dropdown.Item>
-        <Dropdown.Item disabled>Ctrl + V → Paste Node</Dropdown.Item>
-        <Dropdown.Item disabled>Delete → Delete Node/Edge</Dropdown.Item>
-        <Dropdown.Item disabled>Ctrl + Z → Undo</Dropdown.Item>
-        <Dropdown.Item disabled>Ctrl + Shift + Z → Redo</Dropdown.Item>
-        <Dropdown.Divider />
-        <Dropdown.Header>Other Functions</Dropdown.Header>
-        <Dropdown.Item disabled>File → New / Save / Load / Export as Image</Dropdown.Item>
-        <Dropdown.Item disabled>Click Node → Show Node Details</Dropdown.Item>
-        <Dropdown.Item disabled>Click Edge → Select Edge</Dropdown.Item>
-      </DropdownButton>
-    </div>
+    </>
   );
 }

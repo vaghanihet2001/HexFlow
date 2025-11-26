@@ -1,8 +1,10 @@
+// src/components/Sidebar.jsx
 import React, { useState, useEffect } from "react";
 import NodeBuilderModal from "./NodeBuilderModal";
+import AppModal from "./AppModal";
 import { Button, Form } from "react-bootstrap";
 import { useTheme } from "./ThemeContext";
-import { FaTrash, FaPen } from "react-icons/fa";
+import { FaTrash, FaPen, FaCube } from "react-icons/fa";
 import { getAuth } from "firebase/auth";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -19,14 +21,16 @@ export default function Sidebar({
   const [editNode, setEditNode] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Skeleton loader
   const [loadingNodes, setLoadingNodes] = useState(true);
+
+  // 🔥 Global AppModal state
+  const [confirmResetModal, setConfirmResetModal] = useState({ show: false });
 
   const { themeColors } = useTheme();
 
-  // =============================
+  // ========================================
   // 🔐 Auth Fetch Wrapper
-  // =============================
+  // ========================================
   const fetchWithAuth = async (url, options = {}) => {
     const auth = getAuth();
     const user = auth.currentUser;
@@ -44,9 +48,9 @@ export default function Sidebar({
     });
   };
 
-  // =============================
-  // 📥 Fetch nodes from backend
-  // =============================
+  // ========================================
+  // 📥 Fetch nodes
+  // ========================================
   useEffect(() => {
     const fetchNodes = async () => {
       try {
@@ -55,11 +59,9 @@ export default function Sidebar({
         const res = await fetchWithAuth(`${BACKEND_URL}/nodes`);
         const data = await res.json();
 
-        if (Array.isArray(data)) {
-          setCustomNodes(data);
-        }
+        if (Array.isArray(data)) setCustomNodes(data);
       } catch (err) {
-        console.error("Failed to fetch custom nodes:", err);
+        console.error("Failed to fetch nodes:", err);
       } finally {
         setLoadingNodes(false);
       }
@@ -67,9 +69,8 @@ export default function Sidebar({
 
     const auth = getAuth();
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setTimeout(fetchNodes, 300);
-      } else {
+      if (user) setTimeout(fetchNodes, 300);
+      else {
         setCustomNodes([]);
         setLoadingNodes(false);
       }
@@ -78,11 +79,26 @@ export default function Sidebar({
     return () => unsubscribe();
   }, []);
 
-  // =============================
-  // 💾 Save custom node
-  // =============================
+  // ========================================
+  // 💾 Save custom node (duplicate fix)
+  // ========================================
   const handleSaveCustomNode = async (node) => {
-    const nodeWithId = { ...node, id: node.id || `custom_${Date.now()}` };
+    const nodeWithId = {
+      ...node,
+      id: node.id || `custom_${Date.now()}`,
+    };
+
+    // 🚀 FIX: Ignore the current node when checking duplicates
+    if (
+      customNodes.some(
+        (n) =>
+          n.id !== nodeWithId.id &&
+          n.label.trim().toLowerCase() === nodeWithId.label.trim().toLowerCase()
+      )
+    ) {
+      throw new Error("A node with this name already exists.");
+    }
+
     try {
       setLoadingNodes(true);
 
@@ -99,16 +115,17 @@ export default function Sidebar({
       setShowModal(false);
     } catch (err) {
       console.error("Failed to save custom node:", err);
+      throw err;
     } finally {
       setLoadingNodes(false);
     }
   };
 
-  // =============================
-  // 🗑️ Delete node
-  // =============================
+  // ========================================
+  // 🗑 Delete node
+  // ========================================
   const handleDelete = async (nodeId) => {
-    if (!window.confirm("Are you sure you want to delete this custom node?")) return;
+    if (!window.confirm("Delete this custom node?")) return;
 
     try {
       setLoadingNodes(true);
@@ -127,12 +144,22 @@ export default function Sidebar({
     }
   };
 
-  // =============================
-  // 🔁 Reset nodes
-  // =============================
-  const handleReset = async () => {
-    if (!window.confirm("Are you sure you want to reset all custom nodes?")) return;
+  // ========================================
+  // Reset nodes → Use AppModal
+  // ========================================
+  const openResetConfirm = () => {
+    setConfirmResetModal({
+      show: true,
+      title: "Remove All Custom Nodes?",
+      message: "This will permanently delete all your custom nodes.",
+      type: "confirm",
+      confirmText: "Remove",
+      cancelText: "Cancel",
+      onConfirm: handleResetConfirm,
+    });
+  };
 
+  const handleResetConfirm = async () => {
     try {
       setLoadingNodes(true);
 
@@ -140,30 +167,42 @@ export default function Sidebar({
       const data = await allNodes.json();
 
       for (const node of data) {
-        await fetchWithAuth(`${BACKEND_URL}/nodes/${node.id}`, { method: "DELETE" });
+        await fetchWithAuth(`${BACKEND_URL}/nodes/${node.id}`, {
+          method: "DELETE",
+        });
       }
 
       setCustomNodes([]);
+      setConfirmResetModal({ show: false });
     } catch (err) {
-      console.error("Failed to reset custom nodes:", err);
+      console.error("Failed to reset:", err);
+
+      setConfirmResetModal({
+        show: true,
+        title: "Reset Failed",
+        message: err.message || "Something went wrong.",
+        type: "error",
+        confirmText: "Close",
+      });
     } finally {
       setLoadingNodes(false);
     }
   };
 
-  // =============================
-  // 🧩 Merge & Filter Nodes
-  // =============================
+  // ========================================
+  // Merge nodes
+  // ========================================
   const mergedNodesMap = new Map();
   availableNodes.forEach((n) => mergedNodesMap.set(n.id, n));
   customNodes.forEach((n) => mergedNodesMap.set(n.id, n));
+
   const filteredNodes = Array.from(mergedNodesMap.values()).filter((n) =>
     n.label.toLowerCase().includes(search.toLowerCase())
   );
 
-  // =============================
-  // 🎨 Skeleton Item Component
-  // =============================
+  // ========================================
+  // Skeleton item
+  // ========================================
   const SkeletonItem = () => (
     <div
       style={{
@@ -178,7 +217,8 @@ export default function Sidebar({
     >
       <div
         style={{
-          background: "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.2), rgba(255,255,255,0))",
+          background:
+            "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.2), rgba(255,255,255,0))",
           position: "absolute",
           top: 0,
           left: "-100%",
@@ -186,189 +226,223 @@ export default function Sidebar({
           height: "100%",
           animation: "loadingShimmer 1.4s infinite",
         }}
-      ></div>
+      />
     </div>
   );
 
+  // ========================================
+  // UI RENDER
+  // ========================================
   return (
-    <div
-      className="d-flex flex-column"
-      style={{
-        width: isCollapsed ? "50px" : "280px",
-        height: "100vh",
-        transition: "width 0.3s",
-        backgroundColor: themeColors.sidebarBg,
-        borderRight: `1px solid ${themeColors.border}`,
-        color: themeColors.text,
-        position: "relative",
-      }}
-    >
-      <style>
-        {`
-          @keyframes loadingShimmer {
-            0% { left: -100%; }
-            50% { left: 100%; }
-            100% { left: 100%; }
-          }
-        `}
-      </style>
+    <>
+      {/* Floating Toggle Button */}
+      <Button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        style={{
+          position: "absolute",
+          top: "120px",
+          left: isCollapsed ? "12px" : "300px",
+          zIndex: 9999,
+          transition: "left 0.3s",
+          width: "100px",
+          height: "40px",
+          borderRadius: "8px",
+          background: themeColors.cardBg,
+          color: themeColors.text,
+          border: `1px solid ${themeColors.border}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "6px",
+        }}
+      >
+        Nodes <FaCube />
+      </Button>
 
-      {/* Top Sticky Section */}
-      {!isCollapsed && (
-        <div
-          className="flex-shrink-0 px-3 pt-2 pb-1"
-          style={{
-            position: "sticky",
-            top: 0,
-            backgroundColor: themeColors.sidebarBg,
-            zIndex: 10,
-            borderBottom: `1px solid ${themeColors.border}`,
-          }}
-        >
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <h5 className="mb-0">Node Palette</h5>
-            <Button
-              size="sm"
-              variant="outline-secondary"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-            >
-              ⬅
-            </Button>
-          </div>
-
-          <Form.Control
-            type="text"
-            className="mb-2"
-            placeholder="Search nodes..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+      {/* Sidebar */}
+      <div
+        className="d-flex flex-column"
+        style={{
+          width: isCollapsed ? "0px" : "280px",
+          height: "100%",
+          overflow: "hidden",
+          backgroundColor: themeColors.sidebarBg,
+          borderRight: isCollapsed ? "none" : `1px solid ${themeColors.border}`,
+          transition: "width 0.3s",
+          color: themeColors.text,
+        }}
+      >
+        {/* Search Bar */}
+        {!isCollapsed && (
+          <div
+            className="flex-shrink-0 px-3 pt-3 pb-2"
             style={{
-              backgroundColor: themeColors.inputBg,
-              color: themeColors.text,
-              borderColor: themeColors.border,
-            }}
-          />
-        </div>
-      )}
-
-      {/* Middle Scrollable Node List */}
-      {!isCollapsed && (
-        <div className="flex-grow-1 overflow-auto px-3" style={{ paddingBottom: "100px" }}>
-          {loadingNodes ? (
-            // 🔥 Skeleton UI
-            <div className="d-flex flex-column gap-2">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <SkeletonItem key={i} />
-              ))}
-            </div>
-          ) : (
-            // 🔥 Real node list
-            <div className="d-flex flex-column gap-2">
-              {filteredNodes.map((node, idx) => (
-                <div key={idx} className="d-flex justify-content-between align-items-center">
-                  <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    className="flex-grow-1 me-1 d-flex align-items-center"
-                    onClick={() => onAddNode(node)}
-                    style={{
-                      backgroundColor: themeColors.cardBg,
-                      color: themeColors.text,
-                      borderColor: themeColors.border,
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: "16px",
-                        height: "16px",
-                        backgroundColor: node.color || "#aaa",
-                        display: "inline-block",
-                        marginRight: "8px",
-                        borderRadius: "3px",
-                      }}
-                    />
-                    {node.label}
-                  </Button>
-
-                  {node.id?.startsWith("custom_") && (
-                    <div className="d-flex gap-1">
-                      <Button
-                        variant={themeColors.buttonVariant}
-                        size="sm"
-                        style={{
-                          backgroundColor: themeColors.cardBg,
-                          color: themeColors.text,
-                          borderColor: themeColors.border,
-                        }}
-                        onClick={() => {
-                          setEditNode(node);
-                          setShowModal(true);
-                        }}
-                      >
-                        <FaPen />
-                      </Button>
-                      <Button variant="danger" size="sm" onClick={() => handleDelete(node.id)}>
-                        <FaTrash />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Bottom Sticky Buttons */}
-      {!isCollapsed && !loadingNodes && (
-        <div
-          className="flex-shrink-0 p-3"
-          style={{
-            position: "sticky",
-            bottom: 0,
-            backgroundColor: themeColors.sidebarBg,
-            zIndex: 10,
-            borderTop: `1px solid ${themeColors.border}`,
-          }}
-        >
-          <Button
-            variant="primary"
-            className="w-100 mb-2"
-            onClick={() => {
-              setEditNode(null);
-              setShowModal(true);
+              position: "sticky",
+              top: 0,
+              zIndex: 10,
+              backgroundColor: themeColors.sidebarBg,
+              borderBottom: `1px solid ${themeColors.border}`,
             }}
           >
-            + Create Node
-          </Button>
-          <Button variant="danger" className="w-100" onClick={handleReset}>
-            Reset Nodes
-          </Button>
-        </div>
-      )}
+            <style>
+              {`
+                .sidebar-search::placeholder {
+                  color: ${themeColors.placeholderText} !important;
+                }
+                .sidebar-search:focus {
+                  box-shadow: 0 0 0 2px ${themeColors.primary}50 !important;
+                }
+              `}
+            </style>
 
-      {/* Collapsed Button */}
-      {isCollapsed && (
-        <div
-          className="p-2 border-bottom d-flex justify-content-center flex-shrink-0"
-          style={{
-            borderBottom: `1px solid ${themeColors.border}`,
-            backgroundColor: themeColors.sidebarBg,
-          }}
-        >
-          <Button size="sm" variant="outline-secondary" onClick={() => setIsCollapsed(false)}>
-            ➤
-          </Button>
-        </div>
-      )}
+            <Form.Control
+              type="text"
+              className="sidebar-search"
+              placeholder="Search nodes..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                backgroundColor: themeColors.inputBg,
+                color: themeColors.inputText,
+                borderColor: themeColors.border,
+                padding: "8px 10px",
+                borderRadius: "6px",
+              }}
+            />
+          </div>
+        )}
 
-      {/* Node Builder Modal */}
-      <NodeBuilderModal
-        show={showModal}
-        onClose={() => setShowModal(false)}
-        onSave={handleSaveCustomNode}
-        editingNode={editNode}
-      />
-    </div>
+        {/* Node List */}
+        {!isCollapsed && (
+          <div
+            className="flex-grow-1 px-3 py-2"
+            style={{
+              overflowY: "auto",
+              overflowX: "hidden",
+            }}
+          >
+            {loadingNodes ? (
+              <div className="d-flex flex-column gap-2">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <SkeletonItem key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="d-flex flex-column gap-2">
+                {filteredNodes.map((node) => (
+                  <div
+                    key={node.id}
+                    className="d-flex justify-content-between align-items-center"
+                  >
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      className="flex-grow-1 me-1 d-flex align-items-center"
+                      onClick={() => onAddNode(node)}
+                      style={{
+                        backgroundColor: themeColors.cardBg,
+                        color: themeColors.text,
+                        borderColor: themeColors.border,
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: "16px",
+                          height: "16px",
+                          backgroundColor: node.color || "#aaa",
+                          marginRight: "8px",
+                          borderRadius: "3px",
+                        }}
+                      />
+                      {node.label}
+                    </Button>
+
+                    {node.id?.startsWith("custom_") && (
+                      <div className="d-flex gap-1">
+                        <Button
+                          size="sm"
+                          style={{
+                            backgroundColor: themeColors.cardBg,
+                            color: themeColors.text,
+                            borderColor: themeColors.border,
+                          }}
+                          onClick={() => {
+                            setEditNode(node);
+                            setShowModal(true);
+                          }}
+                        >
+                          <FaPen />
+                        </Button>
+
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleDelete(node.id)}
+                        >
+                          <FaTrash />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Bottom */}
+        {!isCollapsed && !loadingNodes && (
+          <div
+            className="flex-shrink-0 p-3"
+            style={{
+              position: "sticky",
+              bottom: 0,
+              backgroundColor: themeColors.sidebarBg,
+              borderTop: `1px solid ${themeColors.border}`,
+            }}
+          >
+            <Button
+              variant="primary"
+              className="w-100 mb-2"
+              onClick={() => {
+                setEditNode(null);
+                setShowModal(true);
+              }}
+            >
+              + Create Node
+            </Button>
+
+            <Button variant="danger" className="w-100" onClick={openResetConfirm}>
+              Remove Nodes
+            </Button>
+            
+
+            <footer style={{ fontSize: "0.75rem", marginTop: "10px", textAlign: "center", color: themeColors.subtleText }}>
+                © 2025 HexFlow by HexVerce
+            </footer>
+
+          </div>
+        )}
+
+        {/* Modals */}
+        <NodeBuilderModal
+          show={showModal}
+          onClose={() => setShowModal(false)}
+          onSave={handleSaveCustomNode}
+          editingNode={editNode}
+        />
+
+        <AppModal
+          show={confirmResetModal.show}
+          title={confirmResetModal.title}
+          message={confirmResetModal.message}
+          type={confirmResetModal.type}
+          confirmText={confirmResetModal.confirmText}
+          cancelText={confirmResetModal.cancelText}
+          onConfirm={confirmResetModal.onConfirm}
+          onClose={() => setConfirmResetModal({ show: false })}
+        />
+      </div>
+    </>
   );
 }

@@ -1,6 +1,5 @@
 // src/theme/ThemeContext.jsx
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { Placeholder } from "react-bootstrap";
 
 // --- Centralized color palette ---
 export const lightTheme = {
@@ -17,12 +16,11 @@ export const lightTheme = {
   inputBg: "#ffffff",
   inputText: "#212529",
   subtleText: "#6b7280",
-  placeholderText: "#212529",
+  placeholderText: "#6b7280",
   buttonBg: "#ffffff",
   buttonText: "#212529",
   hoverBg: "#e9ecef",
 
-  // 🔵 Added for better UI consistency
   primary: "#0066CC",
   accent: "#33CCFF",
   link: "#4f8cff",
@@ -31,7 +29,6 @@ export const lightTheme = {
   googleBtnText: "#333333",
   shadow: "rgba(22, 10, 122, 0.50)",
 };
-
 
 export const darkTheme = {
   background: "#121212",
@@ -47,12 +44,11 @@ export const darkTheme = {
   inputBg: "#2c2c2c",
   inputText: "#ffffff",
   subtleText: "#94a3b8",
-  placeholderText: "#ffffff",
+  placeholderText: "#aaaaaa",
   buttonBg: "#2c2c2c",
   buttonText: "#ffffff",
   hoverBg: "#3a3a3a",
 
-  // 🟣 Added theme-aware properties for login and UI cards
   primary: "#0066CC",
   accent: "#33CCFF",
   link: "#4f8cff",
@@ -69,26 +65,36 @@ const ThemeContext = createContext();
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState("dark");
 
-  // Load saved theme from localStorage on mount
+  // Current theme colors **must be defined BEFORE useEffects**
+  const themeColors = theme === "light" ? lightTheme : darkTheme;
+
+  // Load saved theme
   useEffect(() => {
-    const savedTheme = localStorage.getItem("app-theme");
-    if (savedTheme === "light" || savedTheme === "dark") {
-      setTheme(savedTheme);
+    const saved = localStorage.getItem("app-theme");
+    if (saved === "light" || saved === "dark") {
+      setTheme(saved);
     }
   }, []);
 
-  // Save theme to localStorage whenever it changes
+  // Save theme to localStorage
   useEffect(() => {
     localStorage.setItem("app-theme", theme);
   }, [theme]);
 
-  // Toggle theme
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
-  };
+  // 🔥 Set global scrollbar gradient colors
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--scroll-primary",
+      themeColors.primary
+    );
+    document.documentElement.style.setProperty(
+      "--scroll-accent",
+      themeColors.accent
+    );
+  }, [themeColors]);
 
-  // Current theme colors
-  const themeColors = theme === "light" ? lightTheme : darkTheme;
+  const toggleTheme = () =>
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, themeColors }}>
@@ -97,5 +103,4 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-// --- Custom hook for using theme ---
 export const useTheme = () => useContext(ThemeContext);

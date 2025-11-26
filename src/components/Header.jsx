@@ -7,6 +7,7 @@ import {
   FaSun,
   FaMoon,
   FaUserCircle,
+  FaGlobe,
 } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useTheme } from "./ThemeContext";
@@ -25,6 +26,7 @@ const Header = () => {
     github: "https://github.com/vaghanihet2001",
     linkedin: "https://www.linkedin.com/in/ai-ml-developer",
     email: "vaghanihet2001@gmail.com",
+    webpage: "https://hexverce.in/",
   };
 
   const buttonStyle = {
@@ -41,6 +43,8 @@ const Header = () => {
   };
 
   return (
+
+   
     <header
       className="d-flex align-items-center justify-content-between px-3"
       style={{
@@ -51,15 +55,20 @@ const Header = () => {
         position: "relative",
       }}
     >
+
       {/* Logo */}
-      <div className="d-flex align-items-center gap-2">
+      <div className="title d-flex align-items-center gap-2">
         <img
           src="src/assets/logo-removebg.png"
           alt="HEX Logo"
           className="img-fluid"
           style={{ height: "40px" }}
         />
-        <span className="fw-bold fs-5">HexFlow</span>
+        <span className="fw-bold fs-3" style={{
+          background: `linear-gradient(90deg, ${themeColors.primary}, ${themeColors.accent})`,
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+        }}>HexFlow</span>
       </div>
 
       {/* Right side buttons */}
@@ -113,6 +122,16 @@ const Header = () => {
                   >
                     <FaEnvelope /> Email
                   </a>
+
+                  <a
+                    href={`${developerInfo.webpage}`}
+                    className="d-flex align-items-center text-decoration-none gap-2"
+                    style={{ color: themeColors.text }}
+                  >
+                    <FaGlobe /> HexVerce Website 
+                  </a>
+
+
                 </div>
               </div>
             </div>
