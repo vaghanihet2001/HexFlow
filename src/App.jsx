@@ -42,6 +42,7 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const [copiedNodes, setCopiedNodes] = useState([]);
+  const [reactFlowInstance, setReactFlowInstance] = useState(null); // ✅ NEW
 
   // 1️⃣ Load from localStorage once on mount
   useEffect(() => {
@@ -75,7 +76,8 @@ export default function App() {
     setNodes,
     edges,
     setEdges,
-    pushToHistory
+    pushToHistory,
+    reactFlowInstance // ✅ Pass instance
   );
 
   const addNode = (node) => {
@@ -93,14 +95,14 @@ export default function App() {
       nds.map((n) =>
         n.id === nodeId
           ? {
-              ...n,
-              data: {
-                ...n.data,
-                fields: n.data.fields?.map((f) =>
-                  f.id === fieldId ? { ...f, [key]: value } : f
-                ),
-              },
-            }
+            ...n,
+            data: {
+              ...n.data,
+              fields: n.data.fields?.map((f) =>
+                f.id === fieldId ? { ...f, [key]: value } : f
+              ),
+            },
+          }
           : n
       )
     );
@@ -270,6 +272,7 @@ export default function App() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onInit={setReactFlowInstance} // ✅ Capture instance
             nodeTypes={nodeTypes}
             edgeTypes={{ custom: CustomEdge }}
             onNodeClick={(e, node) => {

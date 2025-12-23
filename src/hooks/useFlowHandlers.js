@@ -1,23 +1,49 @@
 // src/hooks/useFlowHandlers.js
 import { useCallback } from "react";
 
-export function useFlowHandlers(nodes, setNodes, edges, setEdges, pushToHistory) {
+export function useFlowHandlers(nodes, setNodes, edges, setEdges, pushToHistory, reactFlowInstance) {
   const addNode = useCallback(
     (nodeInfo) => {
       pushToHistory(nodes, edges);
 
+      // 📍 Calculate center position if instance exists
+      let position = { x: Math.random() * 400, y: Math.random() * 400 };
+      if (reactFlowInstance) {
+        const center = reactFlowInstance.screenToFlowPosition({
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+        });
+        // Add slight random offset so they don't stack perfectly
+        position = {
+          x: center.x + (Math.random() - 0.5) * 50,
+          y: center.y + (Math.random() - 0.5) * 50,
+        };
+      }
+
+      // 🛠 Set default values for dropdowns
+      const fieldsWithDefaults = nodeInfo.fields?.map((f) => {
+        if (f.type === "dropdown" && !f.value && f.options?.length > 0) {
+          return { ...f, value: f.options[0] };
+        }
+        return f;
+      });
+
       const newNode = {
         id: `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         type: nodeInfo.type,
-        position: { x: Math.random() * 400, y: Math.random() * 400 },
-        data: { ...nodeInfo, instanceId: Date.now() + Math.random() },
+        position,
+        data: {
+          ...nodeInfo,
+          fields: fieldsWithDefaults,
+          instanceId: Date.now() + Math.random(),
+        },
         width: nodeInfo.width || 200,
         height: nodeInfo.height || 120,
       };
 
       setNodes((nds) => [...nds, newNode]);
     },
-    [nodes, edges, setNodes, pushToHistory]
+    [nodes, edges, setNodes, pushToHistory, reactFlowInstance]
   );
 
   const onConnect = useCallback(

@@ -150,7 +150,7 @@ export default function NodeDetailsPanel({
                 {field.type === "dropdown" && (
                   <select
                     className="form-select"
-                    value={field.value}
+                    value={field.value || ""}
                     onChange={(e) =>
                       updateNodeField(node.id, field.id, "value", e.target.value)
                     }
@@ -160,8 +160,9 @@ export default function NodeDetailsPanel({
                       borderColor: themeColors.border,
                     }}
                   >
+                    <option value="" disabled>Select...</option>
                     {field.options.map((o) => (
-                      <option key={o}>{o}</option>
+                      <option key={o} value={o}>{o}</option>
                     ))}
                   </select>
                 )}

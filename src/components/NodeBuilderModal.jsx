@@ -25,7 +25,7 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
     const f = (n) =>
       Math.round(
         255 *
-          (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))))
+        (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))))
       )
         .toString(16)
         .padStart(2, "0");
@@ -72,7 +72,7 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
 
   const addField = (type) => {
     const base = {
-      id: Date.now(),
+      id: Date.now() + Math.random(),
       type,
       label: `${type} field`,
       hide: false,
@@ -108,13 +108,26 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
     setSaving(true);
     setErrorMsg("");
 
+    const cleanedFields = fields.map((field) => {
+      if (
+        ["dropdown", "radio", "checkbox"].includes(field.type) &&
+        Array.isArray(field.options)
+      ) {
+        return {
+          ...field,
+          options: field.options.map((o) => o.trim()).filter((o) => o),
+        };
+      }
+      return field;
+    });
+
     const newNode = {
       id: editingNode?.id || `custom_${Date.now()}`,
       type: editingNode?.type || "customNode",
       label,
       custom: true,
       color,
-      fields,
+      fields: cleanedFields,
     };
 
     try {
@@ -178,9 +191,8 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
           "--bs-form-select-border-color": themeColors.border,
 
           // Dropdown arrow SVG
-          "--select-arrow": `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='${
-            themeColors.text
-          }' viewBox='0 0 16 16'%3E%3Cpath d='M3 6l5 5 5-5z'/%3E%3C/svg%3E")`,
+          "--select-arrow": `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='${themeColors.text
+            }' viewBox='0 0 16 16'%3E%3Cpath d='M3 6l5 5 5-5z'/%3E%3C/svg%3E")`,
 
           // Date icon fix
           "--dp-color-scheme": themeColors.isDark ? "dark" : "light",
