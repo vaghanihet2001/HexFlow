@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Handle, Position, NodeResizer } from "reactflow";
 
-export default function CustomNode({ data, selected }) {
+export default function CustomNode({ id, data, selected }) {
   const [nodeHeight, setNodeHeight] = useState(100);
 
   useEffect(() => {
     const handleResize = () => {
-      const el = document.getElementById(data.id);
+      const el = document.getElementById(id);
       if (el) setNodeHeight(el.offsetHeight);
     };
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [data.id]);
+  }, [id]);
 
   // Format datetime nicely inside the node
   const prettyDateTime = (str) => {
@@ -24,7 +24,7 @@ export default function CustomNode({ data, selected }) {
 
   return (
     <div
-      id={data.id}
+      id={id}
       style={{
         padding: "10px",
         border: "2px solid #555",
@@ -160,8 +160,22 @@ export default function CustomNode({ data, selected }) {
         ))}
 
       {/* Flow handles */}
-      <Handle type="target" position={Position.Top} />
-      <Handle type="source" position={Position.Bottom} />
+      {/* Flow handles - All Sides */}
+      {/* TOP */}
+      <Handle type="target" position={Position.Top} id="target-top" style={{ left: "50%" }} />
+      <Handle type="source" position={Position.Top} id="source-top" style={{ left: "50%" }} />
+
+      {/* RIGHT */}
+      <Handle type="target" position={Position.Right} id="target-right" style={{ top: "50%" }} />
+      <Handle type="source" position={Position.Right} id="source-right" style={{ top: "50%" }} />
+
+      {/* BOTTOM */}
+      <Handle type="target" position={Position.Bottom} id="target-bottom" style={{ left: "50%" }} />
+      <Handle type="source" position={Position.Bottom} id="source-bottom" style={{ left: "50%" }} />
+
+      {/* LEFT */}
+      <Handle type="target" position={Position.Left} id="target-left" style={{ top: "50%" }} />
+      <Handle type="source" position={Position.Left} id="source-left" style={{ top: "50%" }} />
     </div>
   );
 }

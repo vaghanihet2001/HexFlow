@@ -51,6 +51,16 @@ export function useFlowHandlers(nodes, setNodes, edges, setEdges, pushToHistory,
       // Prevent incomplete edges
       if (!params.source || !params.target) return;
 
+      // 🚫 Prevent duplicate connections
+      const exists = edges.some(
+        (e) =>
+          e.source === params.source &&
+          e.target === params.target &&
+          e.sourceHandle === params.sourceHandle &&
+          e.targetHandle === params.targetHandle
+      );
+      if (exists) return;
+
       pushToHistory(nodes, edges);
 
       const newEdge = {
