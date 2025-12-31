@@ -353,6 +353,7 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
 
         <div className="d-flex gap-2 mt-3 flex-wrap">
           <Button onClick={() => addField("text")}>+ Text</Button>
+          <Button onClick={() => addField("textarea")}>+ Text Area</Button>
           <Button onClick={() => addField("dropdown")}>+ Dropdown</Button>
           <Button onClick={() => addField("radio")}>+ Radio</Button>
           <Button onClick={() => addField("checkbox")}>+ Checkbox</Button>

@@ -147,6 +147,22 @@ export default function NodeDetailsPanel({
                   />
                 )}
 
+                {field.type === "textarea" && (
+                  <textarea
+                    className="form-control"
+                    style={{
+                      backgroundColor: themeColors.background,
+                      color: themeColors.text,
+                      borderColor: themeColors.border,
+                      minHeight: "80px",
+                    }}
+                    value={field.value}
+                    onChange={(e) =>
+                      updateNodeField(node.id, field.id, "value", e.target.value)
+                    }
+                  />
+                )}
+
                 {field.type === "dropdown" && (
                   <select
                     className="form-select"

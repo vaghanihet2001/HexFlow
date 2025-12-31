@@ -55,7 +55,17 @@ export default function CustomNode({ id, data, selected }) {
       {data.fields
         ?.filter((f) => !f.hide)
         .map((field) => (
-          <div key={field.id} style={{ marginTop: "5px", fontSize: "13px" }}>
+          <div
+            key={field.id}
+            style={{
+              marginTop: "5px",
+              fontSize: "13px",
+              display: field.type === "textarea" ? "flex" : "block",
+              flexDirection: "column",
+              flex: field.type === "textarea" ? 1 : "0 0 auto",
+              minHeight: field.type === "textarea" ? 0 : "auto",
+            }}
+          >
             <label style={{ fontWeight: "500" }}>{field.label}:</label>
 
             {/* ====================== TEXT ====================== */}
@@ -66,6 +76,23 @@ export default function CustomNode({ id, data, selected }) {
                 value={field.value || ""}
                 disabled
                 style={{ fontSize: "12px", padding: "3px 6px" }}
+              />
+            )}
+
+            {/* ====================== TEXT AREA ====================== */}
+            {field.type === "textarea" && (
+              <textarea
+                className="form-control"
+                value={field.value || ""}
+                disabled
+                style={{
+                  fontSize: "12px",
+                  padding: "3px 6px",
+                  resize: "none",
+                  height: "100%",
+                  width: "100%",
+                  boxSizing: "border-box",
+                }}
               />
             )}
 
