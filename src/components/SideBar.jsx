@@ -433,7 +433,7 @@ export default function Sidebar({
                 color: themeColors.subtleText,
               }}
             >
-              © 2025 HexFlow by HexVerce
+              © {new Date().getFullYear()} HexFlow by HexVerce
             </footer>
           </div>
         )}
