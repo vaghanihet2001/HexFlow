@@ -14,6 +14,7 @@ import { nodeTypes, availableNodes } from "./nodes";
 import { componentTypes } from "./components";
 import CustomEdge from "./components/CustomEdge";
 import EdgeDetailsPanel from "./components/EdgeDetailsPanel";
+import DatabaseNodeDetailsPanel from "./components/DatabaseNodeDetailsPanel";
 import { useFlowHandlers } from "./hooks/useFlowHandlers";
 import { useTheme } from "./components/ThemeContext";
 
@@ -303,10 +304,19 @@ export default function App() {
           </ReactFlow>
         </div>
 
-        {showNodeDetails && selectedNode && (
+        {showNodeDetails && selectedNode && selectedNode.type !== "databaseSchema" && (
           <NodeDetailsPanel
             node={selectedNode}
             updateNodeField={updateNodeField}
+            updateNodeData={updateNodeData}
+            deleteNode={deleteNode}
+            onClosePanel={() => setShowNodeDetails(false)}
+          />
+        )}
+
+        {showNodeDetails && selectedNode && selectedNode.type === "databaseSchema" && (
+          <DatabaseNodeDetailsPanel
+            node={selectedNode}
             updateNodeData={updateNodeData}
             deleteNode={deleteNode}
             onClosePanel={() => setShowNodeDetails(false)}
