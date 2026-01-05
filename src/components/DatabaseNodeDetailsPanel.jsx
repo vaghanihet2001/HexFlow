@@ -218,13 +218,16 @@ export default function DatabaseNodeDetailsPanel({
                                 borderColor: themeColors.border,
                             }}
                         >
+                            <option value="undefined">undefined</option>
                             <option value="int">int</option>
+                            <option value="float">float</option>
                             <option value="varchar">varchar</option>
                             <option value="boolean">boolean</option>
+                            <option value="string">string</option>
+                            <option value="array">array</option>
+                            <option value="dictionary">dictionary</option>
                             <option value="date">date</option>
                             <option value="datetime">datetime</option>
-                            <option value="float">float</option>
-                            <option value="text">text</option>
                         </select>
                     </div>
                     <button className="btn btn-sm btn-primary w-100" onClick={handleAddColumn}>
