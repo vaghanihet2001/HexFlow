@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import logoUrl from "../assets/logo-removebg.png";
 import {
   FaGithub,
   FaLinkedin,
@@ -59,7 +60,7 @@ const Header = () => {
       {/* Logo */}
       <div className="title d-flex align-items-center gap-2">
         <img
-          src="src/assets/logo-removebg.png"
+          src={logoUrl}
           alt="HEX Logo"
           className="img-fluid"
           style={{ height: "40px" }}

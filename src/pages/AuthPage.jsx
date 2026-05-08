@@ -1,5 +1,6 @@
 // src/pages/AuthPage.jsx
 import React, { useState } from "react";
+import logoUrl from "../assets/logo-removebg.png";
 import { useAuth } from "../auth/AuthContext";
 
 const AuthPage = () => {
@@ -39,7 +40,7 @@ const AuthPage = () => {
         }}
       >
         <img
-          src="src/assets/logo-removebg.png"
+          src={logoUrl}
           alt="HexFlow"
           style={{ width: "120px", marginBottom: "1rem" }}
         />

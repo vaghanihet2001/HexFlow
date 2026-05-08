@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import logoUrl from "../assets/logo-removebg.png";
 import { FaGoogle } from "react-icons/fa";
 import { useAuth } from "../auth/AuthContext";
 import { useTheme } from "../components/ThemeContext";
@@ -45,7 +46,7 @@ const LoginPage = () => {
       <div className={styles.illustrationSide}>
       
         <img
-          src="src/assets/logo-removebg.png"
+          src={logoUrl}
           alt="HexFlow Logo"
           className={styles.logo}
         />
