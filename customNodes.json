@@ -1,332 +1,481 @@
 [
   {
-    "id": "custom_1758865828114",
+    "id": "custom_gp_start",
     "type": "customNode",
-    "label": "Model",
+    "label": "Start",
     "custom": true,
-    "color": "#b2f0bd",
+    "color": "#4ade80",
     "fields": [
       {
-        "id": 1758865772294,
+        "id": 1001,
+        "type": "dropdown",
+        "label": "Trigger",
+        "options": ["Manual", "Webhook", "Schedule", "Event", "Message"],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_scheduler",
+    "type": "customNode",
+    "label": "Scheduler",
+    "custom": true,
+    "color": "#86efac",
+    "fields": [
+      {
+        "id": 1011,
+        "type": "dropdown",
+        "label": "Type",
+        "options": ["Cron", "Interval", "One-shot", "Rate-limited"],
+        "value": ""
+      },
+      {
+        "id": 1012,
+        "type": "text",
+        "label": "Schedule / Expression",
+        "options": [],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_webhook",
+    "type": "customNode",
+    "label": "Webhook",
+    "custom": true,
+    "color": "#fdba74",
+    "fields": [
+      {
+        "id": 1021,
+        "type": "dropdown",
+        "label": "Method",
+        "options": ["POST", "GET", "PUT", "PATCH", "DELETE"],
+        "value": ""
+      },
+      {
+        "id": 1022,
+        "type": "text",
+        "label": "Path",
+        "options": [],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_http_request",
+    "type": "customNode",
+    "label": "HTTP Request",
+    "custom": true,
+    "color": "#7dd3fc",
+    "fields": [
+      {
+        "id": 1031,
+        "type": "dropdown",
+        "label": "Method",
+        "options": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+        "value": ""
+      },
+      {
+        "id": 1032,
+        "type": "text",
+        "label": "URL",
+        "options": [],
+        "value": ""
+      },
+      {
+        "id": 1033,
+        "type": "dropdown",
+        "label": "Auth",
+        "options": ["None", "Bearer Token", "API Key", "Basic Auth", "OAuth2"],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_api_endpoint",
+    "type": "customNode",
+    "label": "API Endpoint",
+    "custom": true,
+    "color": "#38bdf8",
+    "fields": [
+      {
+        "id": 1041,
+        "type": "dropdown",
+        "label": "Method",
+        "options": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+        "value": ""
+      },
+      {
+        "id": 1042,
+        "type": "text",
+        "label": "Route",
+        "options": [],
+        "value": ""
+      },
+      {
+        "id": 1043,
+        "type": "dropdown",
+        "label": "Content-Type",
+        "options": ["application/json", "multipart/form-data", "text/plain", "application/xml"],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_function",
+    "type": "customNode",
+    "label": "Function",
+    "custom": true,
+    "color": "#c4b5fd",
+    "fields": [
+      {
+        "id": 1051,
+        "type": "dropdown",
+        "label": "Runtime",
+        "options": ["Node.js", "Python", "Go", "Java", "Rust", "C#"],
+        "value": ""
+      },
+      {
+        "id": 1052,
+        "type": "text",
+        "label": "Name",
+        "options": [],
+        "value": ""
+      },
+      {
+        "id": 1053,
+        "type": "radio",
+        "label": "Async",
+        "options": ["Yes", "No"],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_condition",
+    "type": "customNode",
+    "label": "Condition",
+    "custom": true,
+    "color": "#fde047",
+    "fields": [
+      {
+        "id": 1061,
+        "type": "dropdown",
+        "label": "Type",
+        "options": ["If / Else", "Switch", "Filter", "Guard"],
+        "value": ""
+      },
+      {
+        "id": 1062,
+        "type": "text",
+        "label": "Expression",
+        "options": [],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_transform",
+    "type": "customNode",
+    "label": "Transform",
+    "custom": true,
+    "color": "#5eead4",
+    "fields": [
+      {
+        "id": 1071,
+        "type": "dropdown",
+        "label": "Operation",
+        "options": ["Map", "Filter", "Reduce", "Sort", "Group By", "Flatten", "Distinct"],
+        "value": ""
+      },
+      {
+        "id": 1072,
+        "type": "dropdown",
+        "label": "Format",
+        "options": ["JSON", "CSV", "XML", "Parquet", "Avro", "Plain Text"],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_database",
+    "type": "customNode",
+    "label": "Database",
+    "custom": true,
+    "color": "#86d05c",
+    "fields": [
+      {
+        "id": 1081,
+        "type": "dropdown",
+        "label": "Engine",
+        "options": ["PostgreSQL", "MySQL", "SQLite", "MongoDB", "Cassandra", "DynamoDB", "Firestore"],
+        "value": ""
+      },
+      {
+        "id": 1082,
+        "type": "dropdown",
+        "label": "Operation",
+        "options": ["Read", "Write", "Upsert", "Delete", "Query", "Aggregate"],
+        "value": ""
+      },
+      {
+        "id": 1083,
+        "type": "radio",
+        "label": "Connection",
+        "options": ["Local", "Remote"],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_cache",
+    "type": "customNode",
+    "label": "Cache",
+    "custom": true,
+    "color": "#a7f3d0",
+    "fields": [
+      {
+        "id": 1091,
+        "type": "dropdown",
+        "label": "Provider",
+        "options": ["Redis", "Memcached", "In-Memory", "CDN Edge", "Varnish"],
+        "value": ""
+      },
+      {
+        "id": 1092,
+        "type": "dropdown",
+        "label": "Strategy",
+        "options": ["Cache-Aside", "Write-Through", "Write-Back", "Read-Through"],
+        "value": ""
+      },
+      {
+        "id": 1093,
+        "type": "text",
+        "label": "TTL (seconds)",
+        "options": [],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_queue",
+    "type": "customNode",
+    "label": "Message Queue",
+    "custom": true,
+    "color": "#fb923c",
+    "fields": [
+      {
+        "id": 1101,
+        "type": "dropdown",
+        "label": "Provider",
+        "options": ["Kafka", "RabbitMQ", "AWS SQS", "Google Pub/Sub", "NATS", "Redis Streams"],
+        "value": ""
+      },
+      {
+        "id": 1102,
+        "type": "radio",
+        "label": "Pattern",
+        "options": ["Pub/Sub", "Point-to-Point", "Request/Reply"],
+        "value": ""
+      },
+      {
+        "id": 1103,
+        "type": "text",
+        "label": "Topic / Queue Name",
+        "options": [],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_file_storage",
+    "type": "customNode",
+    "label": "File Storage",
+    "custom": true,
+    "color": "#d4a27f",
+    "fields": [
+      {
+        "id": 1111,
+        "type": "dropdown",
+        "label": "Provider",
+        "options": ["AWS S3", "Google Cloud Storage", "Azure Blob", "Local Disk", "SFTP", "FTP"],
+        "value": ""
+      },
+      {
+        "id": 1112,
+        "type": "dropdown",
+        "label": "Operation",
+        "options": ["Upload", "Download", "Delete", "List", "Stream"],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_auth",
+    "type": "customNode",
+    "label": "Authentication",
+    "custom": true,
+    "color": "#fca5a5",
+    "fields": [
+      {
+        "id": 1121,
+        "type": "dropdown",
+        "label": "Method",
+        "options": ["JWT", "OAuth2", "API Key", "Basic Auth", "SAML", "OIDC"],
+        "value": ""
+      },
+      {
+        "id": 1122,
+        "type": "dropdown",
+        "label": "Provider",
+        "options": ["Custom", "Google", "GitHub", "Auth0", "Firebase", "Keycloak", "Okta"],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_ai_llm",
+    "type": "customNode",
+    "label": "AI / LLM",
+    "custom": true,
+    "color": "#e879f9",
+    "fields": [
+      {
+        "id": 1131,
+        "type": "dropdown",
+        "label": "Provider",
+        "options": ["OpenAI", "Anthropic", "Google Gemini", "Mistral", "Ollama (Local)", "HuggingFace"],
+        "value": ""
+      },
+      {
+        "id": 1132,
+        "type": "text",
+        "label": "Model",
+        "options": [],
+        "value": ""
+      },
+      {
+        "id": 1133,
         "type": "dropdown",
         "label": "Task",
-        "options": [
-          "OBB ",
-          " DETECT ",
-          " SEGMENT ",
-          " CLASSIFY ",
-          " OCR",
-          " OK"
-        ],
+        "options": ["Chat / Completion", "Embedding", "Classification", "Image Generation", "Speech-to-Text", "Translation"],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_logger",
+    "type": "customNode",
+    "label": "Logger",
+    "custom": true,
+    "color": "#94a3b8",
+    "fields": [
+      {
+        "id": 1141,
+        "type": "dropdown",
+        "label": "Level",
+        "options": ["DEBUG", "INFO", "WARN", "ERROR", "FATAL"],
         "value": ""
       },
       {
-        "id": 1758865812944,
+        "id": 1142,
+        "type": "dropdown",
+        "label": "Destination",
+        "options": ["Console", "File", "Datadog", "Elasticsearch", "CloudWatch", "Loki"],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_notify",
+    "type": "customNode",
+    "label": "Notification",
+    "custom": true,
+    "color": "#a78bfa",
+    "fields": [
+      {
+        "id": 1151,
+        "type": "dropdown",
+        "label": "Channel",
+        "options": ["Email", "SMS", "Push", "Slack", "Teams", "Discord", "PagerDuty"],
+        "value": ""
+      },
+      {
+        "id": 1152,
+        "type": "text",
+        "label": "Recipient / Channel",
+        "options": [],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_merge",
+    "type": "customNode",
+    "label": "Merge / Join",
+    "custom": true,
+    "color": "#67e8f9",
+    "fields": [
+      {
+        "id": 1161,
+        "type": "dropdown",
+        "label": "Strategy",
+        "options": ["Merge Objects", "Concat Arrays", "Zip", "Wait All", "First Wins", "Custom"],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "custom_gp_error_handler",
+    "type": "customNode",
+    "label": "Error Handler",
+    "custom": true,
+    "color": "#f87171",
+    "fields": [
+      {
+        "id": 1171,
+        "type": "dropdown",
+        "label": "Strategy",
+        "options": ["Retry", "Fallback", "Dead Letter Queue", "Alert & Continue", "Abort"],
+        "value": ""
+      },
+      {
+        "id": 1172,
         "type": "radio",
-        "label": ".ext",
-        "options": [
-          ".pt ",
-          " .engine ",
-          " .onnx"
-        ],
+        "label": "Retry",
+        "options": ["Yes", "No"],
         "value": ""
       },
       {
-        "id": 1758867643499,
-        "type": "checkbox",
-        "label": "classes ",
-        "options": [
-          "plate ",
-          " hole"
-        ],
-        "value": []
-      }
-    ]
-  },
-  {
-    "id": "custom_1758879611363",
-    "type": "customNode",
-    "label": "CropEngine",
-    "custom": true,
-    "color": "#9aaefe",
-    "fields": [
-      {
-        "id": 1758879522630,
+        "id": 1173,
         "type": "text",
-        "label": "Project",
+        "label": "Max Retries",
         "options": [],
         "value": ""
       }
     ]
   },
   {
-    "id": "custom_1758879791125",
+    "id": "custom_gp_end",
     "type": "customNode",
-    "label": "Camera ",
+    "label": "End / Response",
     "custom": true,
-    "color": "#878787",
+    "color": "#f43f5e",
     "fields": [
       {
-        "id": 1758879701944,
+        "id": 1181,
         "type": "dropdown",
-        "label": "Type",
-        "options": [
-          "RTSP ",
-          " USB ",
-          "GIGEVision",
-          " CSI"
-        ],
+        "label": "Output Type",
+        "options": ["HTTP Response", "Return Value", "Emit Event", "Write to Store", "Trigger Next Flow"],
         "value": ""
       },
       {
-        "id": 1758879723881,
+        "id": 1182,
         "type": "dropdown",
-        "label": "Protocol",
-        "options": [
-          "OpenCV",
-          " FFMPEG",
-          " Gstreamer",
-          " Aravis",
-          " PiCamera"
-        ],
+        "label": "Status",
+        "options": ["Success", "Error", "Partial", "Cancelled"],
         "value": ""
       }
     ]
-  },
-  {
-    "id": "custom_1758879927724",
-    "type": "customNode",
-    "label": "Trigger",
-    "custom": true,
-    "color": "#878787",
-    "fields": [
-      {
-        "id": 1758879723881,
-        "type": "dropdown",
-        "label": "Type",
-        "options": [
-          "Manual ",
-          " Stream ",
-          " PLC ",
-          " Proximerity"
-        ],
-        "value": ""
-      }
-    ]
-  },
-  {
-    "id": "custom_1758880129047",
-    "type": "customNode",
-    "label": "Cropping",
-    "custom": true,
-    "color": "#b2f0c7",
-    "fields": [
-      {
-        "id": 1758880111422,
-        "type": "text",
-        "label": "Image Size",
-        "options": [],
-        "value": ""
-      },
-      {
-        "id": 1758880119767,
-        "type": "text",
-        "label": "Overlap",
-        "options": [],
-        "value": ""
-      }
-    ]
-  },
-  {
-    "id": "custom_1758887208600",
-    "type": "customNode",
-    "label": "ImageProcessing",
-    "custom": true,
-    "color": "#ffffff",
-    "fields": [
-      {
-        "id": 1758887198072,
-        "type": "text",
-        "label": "logic",
-        "options": [],
-        "value": ""
-      }
-    ]
-  },
-  {
-    "id": "custom_1758887736670",
-    "type": "customNode",
-    "label": "Output merge ",
-    "custom": true,
-    "color": "#e9a5a5",
-    "fields": [
-      {
-        "id": 1758887706900,
-        "type": "dropdown",
-        "label": "Result Object with detections object",
-        "options": [
-          "detection ",
-          " platedetection"
-        ],
-        "value": ""
-      }
-    ]
-  },
-  {
-    "id": "custom_1758887893712",
-    "type": "customNode",
-    "label": "Output Screen",
-    "custom": true,
-    "color": "#e9a5a5",
-    "fields": [
-      {
-        "id": 1758887828060,
-        "type": "checkbox",
-        "label": "features",
-        "options": [
-          "OK/NG count ",
-          " OK/NG graph  ",
-          "inference image"
-        ],
-        "value": []
-      }
-    ]
-  },
-  {
-    "id": "custom_1758888118278",
-    "type": "customNode",
-    "label": "DB entry",
-    "custom": true,
-    "color": "#a5e9ad",
-    "fields": [
-      {
-        "id": 1758887828060,
-        "type": "checkbox",
-        "label": "Database ",
-        "options": [
-          "MongoDB ",
-          " SQLlite ",
-          "MYSQL  "
-        ],
-        "value": []
-      },
-      {
-        "id": 1758888046034,
-        "type": "radio",
-        "label": "Type",
-        "options": [
-          "LocalDB ",
-          " RemoteDB"
-        ],
-        "value": ""
-      }
-    ]
-  },
-  {
-    "id": "custom_1758889428768",
-    "type": "customNode",
-    "label": "Resizing",
-    "custom": true,
-    "color": "#aa8bfe",
-    "fields": [
-      {
-        "id": 1758889274883,
-        "type": "dropdown",
-        "label": "",
-        "options": [
-          "Off ",
-          " Normal ",
-          " Letter Boxing"
-        ],
-        "value": ""
-      }
-    ]
-  },
-  {
-    "id": "custom_1759235503259",
-    "type": "customNode",
-    "label": "ScoreCard",
-    "custom": true,
-    "color": "#ffffff",
-    "fields": [
-      {
-        "id": 1759235469193,
-        "type": "checkbox",
-        "label": "IsOn",
-        "options": [
-          "on",
-          "off"
-        ],
-        "value": []
-      }
-    ]
-  },
-  {
-    "id": "custom_1760007272185",
-    "type": "customNode",
-    "label": "Camera2",
-    "custom": true,
-    "color": "#ffffff",
-    "fields": [
-      {
-        "id": 1760006820940,
-        "type": "text",
-        "label": "Name ",
-        "options": [],
-        "value": ""
-      },
-      {
-        "id": 1760006853613,
-        "type": "dropdown",
-        "label": "Protocol ",
-        "options": [
-          "Gige ",
-          "USB"
-        ],
-        "value": ""
-      },
-      {
-        "id": 1760006878542,
-        "type": "dropdown",
-        "label": "Choose Camera",
-        "options": [
-          "Keyence1 ",
-          " VAimagine1 ",
-          " USB0",
-          " USB1",
-          "USB2",
-          "USB3"
-        ],
-        "value": ""
-      },
-      {
-        "id": 1760006995907,
-        "type": "dropdown",
-        "label": "Manufacturer",
-        "options": [
-          "Keyence ",
-          " VAImagine"
-        ],
-        "value": ""
-      },
-      {
-        "id": 1760007066791,
-        "type": "dropdown",
-        "label": "Type",
-        "options": [
-          "Area ",
-          " Line"
-        ],
-        "value": ""
-      }
-    ]
-  },
-  {
-    "id": "custom_1760007438961",
-    "type": "customNode",
-    "label": "Text",
-    "custom": true,
-    "color": "#bfb3ff",
-    "fields": []
   }
 ]

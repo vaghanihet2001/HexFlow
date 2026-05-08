@@ -5,9 +5,7 @@ import AppModal from "./AppModal";
 import { Button, Form } from "react-bootstrap";
 import { useTheme } from "./ThemeContext";
 import { FaTrash, FaPen, FaCube } from "react-icons/fa";
-import { getAuth } from "firebase/auth";
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+import { getAllNodes, upsertNode, deleteNode, clearAllNodes } from "../utils/nodeDB";
 
 export default function Sidebar({
   availableNodes,
@@ -30,54 +28,21 @@ export default function Sidebar({
   const { themeColors } = useTheme();
 
   // ========================================
-  // 🔐 Auth Fetch Wrapper
-  // ========================================
-  const fetchWithAuth = async (url, options = {}) => {
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    if (!user) throw new Error("User not logged in");
-    const token = await user.getIdToken();
-
-    return fetch(url, {
-      ...options,
-      headers: {
-        ...(options.headers || {}),
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-  };
-
-  // ========================================
-  // 📥 Fetch nodes
+  // 📥 Load nodes from IndexedDB on mount
   // ========================================
   useEffect(() => {
-    const fetchNodes = async () => {
+    const load = async () => {
       try {
         setLoadingNodes(true);
-
-        const res = await fetchWithAuth(`${BACKEND_URL}/nodes`);
-        const data = await res.json();
-
+        const data = await getAllNodes();
         if (Array.isArray(data)) setCustomNodes(data);
       } catch (err) {
-        console.error("Failed to fetch nodes:", err);
+        console.error("Failed to load nodes from IndexedDB:", err);
       } finally {
         setLoadingNodes(false);
       }
     };
-
-    const auth = getAuth();
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) setTimeout(fetchNodes, 300);
-      else {
-        setCustomNodes([]);
-        setLoadingNodes(false);
-      }
-    });
-
-    return () => unsubscribe();
+    load();
   }, []);
 
   // ========================================
@@ -102,15 +67,8 @@ export default function Sidebar({
 
     try {
       setLoadingNodes(true);
-
-      await fetchWithAuth(`${BACKEND_URL}/nodes`, {
-        method: "POST",
-        body: JSON.stringify(nodeWithId),
-      });
-
-      const res = await fetchWithAuth(`${BACKEND_URL}/nodes`);
-      const data = await res.json();
-
+      await upsertNode(nodeWithId);
+      const data = await getAllNodes();
       setCustomNodes(data);
       onSaveCustomNode(nodeWithId);
       setShowModal(false);
@@ -140,15 +98,11 @@ export default function Sidebar({
   const handleDelete = async (nodeId) => {
     try {
       setLoadingNodes(true);
-
-      await fetchWithAuth(`${BACKEND_URL}/nodes/${nodeId}`, { method: "DELETE" });
-
-      const res = await fetchWithAuth(`${BACKEND_URL}/nodes`);
-      const data = await res.json();
-
+      await deleteNode(nodeId);
+      const data = await getAllNodes();
       setCustomNodes(data);
       onDeleteCustomNode(nodeId);
-      setConfirmDeleteNodeModal({ show: false }); // close modal
+      setConfirmDeleteNodeModal({ show: false });
     } catch (err) {
       console.error("Failed to delete custom node:", err);
     } finally {
@@ -174,21 +128,11 @@ export default function Sidebar({
   const handleResetConfirm = async () => {
     try {
       setLoadingNodes(true);
-
-      const allNodes = await fetchWithAuth(`${BACKEND_URL}/nodes`);
-      const data = await allNodes.json();
-
-      for (const node of data) {
-        await fetchWithAuth(`${BACKEND_URL}/nodes/${node.id}`, {
-          method: "DELETE",
-        });
-      }
-
+      await clearAllNodes();
       setCustomNodes([]);
       setConfirmResetModal({ show: false });
     } catch (err) {
       console.error("Failed to reset:", err);
-
       setConfirmResetModal({
         show: true,
         title: "Reset Failed",

@@ -19,7 +19,7 @@ const Header = () => {
   const [infoOpen, setInfoOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { theme, toggleTheme, themeColors } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, ENABLE_AUTH } = useAuth();
 
   const developerInfo = {
     name: "Het Vaghani",
@@ -138,80 +138,82 @@ const Header = () => {
           )}
         </div>
 
-        {/* User Icon / Menu */}
-        <div className="position-relative">
-          <button
-            style={buttonStyle}
-            onClick={() => setUserMenuOpen(!userMenuOpen)}
-          >
-            {user && user.photoURL ? (
-              <img
-                src={user.photoURL}
-                alt="User Avatar"
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                }}
-              />
-            ) : (
-              <FaUserCircle size={22} />
-            )}
-          </button>
-
-          {/* User Menu */}
-          {userMenuOpen && user && (
-            <div
-              className="card position-absolute end-0 mt-2"
-              style={{
-                width: "250px",
-                zIndex: 1000,
-                backgroundColor: themeColors.cardBg,
-                color: themeColors.text,
-              }}
+        {/* User Icon / Menu — only shown when auth is enabled */}
+        {ENABLE_AUTH && (
+          <div className="position-relative">
+            <button
+              style={buttonStyle}
+              onClick={() => setUserMenuOpen(!userMenuOpen)}
             >
-              <div className="card-body p-3 text-center">
-                {user.photoURL ? (
-                  <img
-                    src={user.photoURL}
-                    alt="User"
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      marginBottom: "10px",
-                    }}
-                  />
-                ) : (
-                  <FaUserCircle size={48} className="mb-2" />
-                )}
-                <h6 className="mb-1">{user.displayName || "User"}</h6>
-                <p
-                  className="mb-3"
+              {user && user.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt="User Avatar"
                   style={{
-                    fontSize: "0.85rem",
-                    color: themeColors.subtleText || themeColors.text,
-                    opacity: 0.8,
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
                   }}
-                >
-                  {user.email}
-                </p>
+                />
+              ) : (
+                <FaUserCircle size={22} />
+              )}
+            </button>
 
-                <button
-                  className="btn btn-danger btn-sm w-100"
-                  onClick={() => {
-                    logout();
-                    setUserMenuOpen(false);
-                  }}
-                >
-                  Sign Out
-                </button>
+            {/* User Menu */}
+            {userMenuOpen && user && (
+              <div
+                className="card position-absolute end-0 mt-2"
+                style={{
+                  width: "250px",
+                  zIndex: 1000,
+                  backgroundColor: themeColors.cardBg,
+                  color: themeColors.text,
+                }}
+              >
+                <div className="card-body p-3 text-center">
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt="User"
+                      style={{
+                        width: "60px",
+                        height: "60px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        marginBottom: "10px",
+                      }}
+                    />
+                  ) : (
+                    <FaUserCircle size={48} className="mb-2" />
+                  )}
+                  <h6 className="mb-1">{user.displayName || "User"}</h6>
+                  <p
+                    className="mb-3"
+                    style={{
+                      fontSize: "0.85rem",
+                      color: themeColors.subtleText || themeColors.text,
+                      opacity: 0.8,
+                    }}
+                  >
+                    {user.email}
+                  </p>
+
+                  <button
+                    className="btn btn-danger btn-sm w-100"
+                    onClick={() => {
+                      logout();
+                      setUserMenuOpen(false);
+                    }}
+                  >
+                    Sign Out
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );
