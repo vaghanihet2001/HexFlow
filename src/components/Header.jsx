@@ -44,8 +44,6 @@ const Header = () => {
   };
 
   return (
-
-   
     <header
       className="d-flex align-items-center justify-content-between px-3"
       style={{
@@ -56,7 +54,6 @@ const Header = () => {
         position: "relative",
       }}
     >
-
       {/* Logo */}
       <div className="title d-flex align-items-center gap-2">
         <img
@@ -65,11 +62,16 @@ const Header = () => {
           className="img-fluid"
           style={{ height: "40px" }}
         />
-        <span className="fw-bold fs-3" style={{
-          background: `linear-gradient(90deg, ${themeColors.primary}, ${themeColors.accent})`,
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-        }}>HexFlow</span>
+        <span
+          className="fw-bold fs-3"
+          style={{
+            background: `linear-gradient(90deg, ${themeColors.primary}, ${themeColors.accent})`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          HexFlow
+        </span>
       </div>
 
       {/* Right side buttons */}
@@ -80,59 +82,70 @@ const Header = () => {
         </button>
 
         {/* Info Button */}
-        <div className="position-relative">
-          <button style={buttonStyle} onClick={() => setInfoOpen(!infoOpen)}>
+        <div
+          className="position-relative"
+          onMouseEnter={() => setInfoOpen(true)}
+          onMouseLeave={() => setInfoOpen(false)}
+        >
+          <button style={buttonStyle} type="button">
             <FaInfoCircle size={22} />
           </button>
 
           {infoOpen && (
             <div
-              className="card position-absolute end-0 mt-2"
+              className="position-absolute end-0"
               style={{
                 width: "220px",
                 zIndex: 1000,
-                backgroundColor: themeColors.cardBg,
-                color: themeColors.text,
+                top: "100%",
+                paddingTop: "10px",
               }}
             >
-              <div className="card-body p-3">
-                <h6 className="card-title mb-3">Made by: {developerInfo.name}</h6>
-                <div className="d-flex flex-column gap-2">
-                  <a
-                    href={developerInfo.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="d-flex align-items-center text-decoration-none gap-2"
-                    style={{ color: themeColors.text }}
-                  >
-                    <FaGithub /> GitHub
-                  </a>
-                  <a
-                    href={developerInfo.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="d-flex align-items-center text-decoration-none gap-2"
-                    style={{ color: themeColors.text }}
-                  >
-                    <FaLinkedin /> LinkedIn
-                  </a>
-                  <a
-                    href={`mailto:${developerInfo.email}`}
-                    className="d-flex align-items-center text-decoration-none gap-2"
-                    style={{ color: themeColors.text }}
-                  >
-                    <FaEnvelope /> Email
-                  </a>
-
-                  <a
-                    href={`${developerInfo.webpage}`}
-                    className="d-flex align-items-center text-decoration-none gap-2"
-                    style={{ color: themeColors.text }}
-                  >
-                    <FaGlobe /> HexVerce Website 
-                  </a>
-
-
+              <div
+                className="card shadow-lg"
+                style={{
+                  backgroundColor: themeColors.cardBg,
+                  color: themeColors.text,
+                  borderRadius: "8px",
+                  border: `1px solid ${themeColors.border}`,
+                }}
+              >
+                <div className="card-body p-3">
+                  <h6 className="card-title mb-3">Made by: {developerInfo.name}</h6>
+                  <div className="d-flex flex-column gap-2">
+                    <a
+                      href={developerInfo.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="d-flex align-items-center text-decoration-none gap-2"
+                      style={{ color: themeColors.text }}
+                    >
+                      <FaGithub /> GitHub
+                    </a>
+                    <a
+                      href={developerInfo.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="d-flex align-items-center text-decoration-none gap-2"
+                      style={{ color: themeColors.text }}
+                    >
+                      <FaLinkedin /> LinkedIn
+                    </a>
+                    <a
+                      href={`mailto:${developerInfo.email}`}
+                      className="d-flex align-items-center text-decoration-none gap-2"
+                      style={{ color: themeColors.text }}
+                    >
+                      <FaEnvelope /> Email
+                    </a>
+                    <a
+                      href={`${developerInfo.webpage}`}
+                      className="d-flex align-items-center text-decoration-none gap-2"
+                      style={{ color: themeColors.text }}
+                    >
+                      <FaGlobe /> HexVerce Website
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
