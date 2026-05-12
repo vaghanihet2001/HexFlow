@@ -23,6 +23,8 @@ const Sidebar = componentTypes.sideBar;
 const Toolbar = componentTypes.toolBar;
 const NodeDetailsPanel = componentTypes.nodeDetailsPanel;
 const Header = componentTypes.header;
+const FlowTabs = componentTypes.flowTabs;
+const AppModal = componentTypes.appModal;
 
 const HEADER_HEIGHT = 60;
 const TOOLBAR_HEIGHT = 50;
@@ -57,26 +59,244 @@ export default function App() {
     background: true,
   });
 
+  const [flows, setFlows] = useState([]);
+  const [activeFlowId, setActiveFlowId] = useState(null);
+  const [appModal, setAppModal] = useState({ show: false });
+
   // 1️⃣ Load from localStorage once on mount
   useEffect(() => {
-    const saved = localStorage.getItem("flowState");
-    if (saved) {
+    const savedFlows = localStorage.getItem("hexFlows");
+    const savedActiveId = localStorage.getItem("activeHexFlowId");
+
+    if (savedFlows && savedActiveId) {
       try {
-        const { nodes: savedNodes, edges: savedEdges } = JSON.parse(saved);
-        setNodes(savedNodes || []);
-        setEdges(savedEdges || []);
+        const parsedFlows = JSON.parse(savedFlows);
+        setFlows(parsedFlows);
+        setActiveFlowId(savedActiveId);
+        
+        const activeFlow = parsedFlows.find((f) => f.id === savedActiveId) || parsedFlows[0];
+        setNodes(activeFlow.nodes || []);
+        setEdges(activeFlow.edges || []);
+        if (!parsedFlows.find((f) => f.id === savedActiveId)) {
+          setActiveFlowId(activeFlow.id);
+        }
       } catch (err) {
-        console.error("Failed to parse flowState:", err);
+        console.error("Failed to parse hexFlows:", err);
+        initDefaultFlow();
       }
+    } else {
+      // Migration from old single flow
+      const oldState = localStorage.getItem("flowState");
+      let initialNodes = [];
+      let initialEdges = [];
+      if (oldState) {
+        try {
+          const parsed = JSON.parse(oldState);
+          initialNodes = parsed.nodes || [];
+          initialEdges = parsed.edges || [];
+        } catch (err) {
+          console.error("Failed to parse old flowState:", err);
+        }
+      }
+      const defaultFlow = { id: `flow-${Date.now()}`, name: "Flow-1", nodes: initialNodes, edges: initialEdges };
+      setFlows([defaultFlow]);
+      setActiveFlowId(defaultFlow.id);
+      setNodes(initialNodes);
+      setEdges(initialEdges);
     }
-    setInitialized(true); // ✅ Only after loading complete
+    setInitialized(true);
   }, []);
+
+  const initDefaultFlow = () => {
+    const defaultFlow = { id: `flow-${Date.now()}`, name: "Flow-1", nodes: [], edges: [] };
+    setFlows([defaultFlow]);
+    setActiveFlowId(defaultFlow.id);
+    setNodes([]);
+    setEdges([]);
+  };
 
   // 2️⃣ Save only after initialization to avoid overwriting
   useEffect(() => {
     if (!initialized) return;
-    localStorage.setItem("flowState", JSON.stringify({ nodes, edges }));
-  }, [nodes, edges, initialized]);
+    const flowsToSave = flows.map((f) =>
+      f.id === activeFlowId ? { ...f, nodes, edges } : f
+    );
+    localStorage.setItem("hexFlows", JSON.stringify(flowsToSave));
+    localStorage.setItem("activeHexFlowId", activeFlowId);
+  }, [nodes, edges, flows, activeFlowId, initialized]);
+
+  // =============================
+  // 🗂 FLOW TABS MANAGEMENT
+  // =============================
+  const switchFlow = (targetFlowId) => {
+    if (targetFlowId === activeFlowId) return;
+    setFlows((prev) => {
+      const updatedFlows = prev.map((f) =>
+        f.id === activeFlowId ? { ...f, nodes, edges } : f
+      );
+      const targetFlow = updatedFlows.find((f) => f.id === targetFlowId);
+      if (targetFlow) {
+        setNodes(targetFlow.nodes || []);
+        setEdges(targetFlow.edges || []);
+        setActiveFlowId(targetFlowId);
+        setHistory([]);
+        setRedoStack([]);
+        setSelectedNodeId(null);
+        setSelectedEdgeId(null);
+        setSelectedNodes([]);
+        setSelectedEdges([]);
+      }
+      return updatedFlows;
+    });
+  };
+
+  const addFlow = () => {
+    let i = 1;
+    while (flows.some((f) => f.name.toLowerCase() === `flow-${i}`)) {
+      i++;
+    }
+    
+    const newFlow = {
+      id: `flow-${Date.now()}`,
+      name: `Flow-${i}`,
+      nodes: [],
+      edges: [],
+    };
+    
+    setFlows((prev) => {
+      const updatedFlows = prev.map((f) =>
+        f.id === activeFlowId ? { ...f, nodes, edges } : f
+      );
+      return [...updatedFlows, newFlow];
+    });
+    
+    setNodes([]);
+    setEdges([]);
+    setActiveFlowId(newFlow.id);
+    setHistory([]);
+    setRedoStack([]);
+    setSelectedNodeId(null);
+    setSelectedEdgeId(null);
+    setSelectedNodes([]);
+    setSelectedEdges([]);
+  };
+
+  const duplicateFlow = (sourceFlowId) => {
+    setFlows((prev) => {
+      // First ensure the active flow's latest state is saved
+      const updatedFlows = prev.map((f) =>
+        f.id === activeFlowId ? { ...f, nodes, edges } : f
+      );
+      
+      const sourceFlow = updatedFlows.find((f) => f.id === sourceFlowId);
+      if (!sourceFlow) return updatedFlows;
+
+      // Create new duplicated nodes with fresh instance IDs to avoid conflicts
+      const newNodes = (sourceFlow.nodes || []).map((node) => ({
+        ...node,
+        id: `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        data: { ...node.data, instanceId: Date.now() + Math.random() },
+      }));
+      // Map old node IDs to new node IDs for edges
+      const idMap = {};
+      (sourceFlow.nodes || []).forEach((n, i) => {
+        idMap[n.id] = newNodes[i].id;
+      });
+      const newEdges = (sourceFlow.edges || []).map((edge) => ({
+        ...edge,
+        id: `e-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        source: idMap[edge.source] || edge.source,
+        target: idMap[edge.target] || edge.target,
+      }));
+
+      const newFlow = {
+        id: `flow-${Date.now()}`,
+        name: `${sourceFlow.name} (Copy)`,
+        nodes: newNodes,
+        edges: newEdges,
+      };
+
+      // Switch to the duplicated flow automatically
+      setNodes(newNodes);
+      setEdges(newEdges);
+      setActiveFlowId(newFlow.id);
+      setHistory([]);
+      setRedoStack([]);
+      setSelectedNodeId(null);
+      setSelectedEdgeId(null);
+      setSelectedNodes([]);
+      setSelectedEdges([]);
+
+      return [...updatedFlows, newFlow];
+    });
+  };
+
+  const renameFlow = (id, newName) => {
+    setFlows((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, name: newName } : f))
+    );
+  };
+
+  const removeFlow = (id) => {
+    if (flows.length === 1) {
+      setAppModal({
+        show: true,
+        type: "error",
+        title: "Action Not Allowed",
+        message: "You cannot remove the last flow. There must be at least one flow open.",
+        confirmText: "Close"
+      });
+      return;
+    }
+    setFlows((prev) => {
+      // First, update the active flow's state in case it's not the one being removed
+      const syncedFlows = prev.map((f) =>
+        f.id === activeFlowId ? { ...f, nodes, edges } : f
+      );
+      const newFlows = syncedFlows.filter((f) => f.id !== id);
+      
+      if (id === activeFlowId) {
+        const targetFlow = newFlows[0];
+        setNodes(targetFlow.nodes || []);
+        setEdges(targetFlow.edges || []);
+        setActiveFlowId(targetFlow.id);
+        setHistory([]);
+        setRedoStack([]);
+        setSelectedNodeId(null);
+        setSelectedEdgeId(null);
+        setSelectedNodes([]);
+        setSelectedEdges([]);
+      }
+      return newFlows;
+    });
+  };
+
+  const deleteAllFlows = () => {
+    const defaultFlow = { id: `flow-${Date.now()}`, name: "Flow-1", nodes: [], edges: [] };
+    setFlows([defaultFlow]);
+    setActiveFlowId(defaultFlow.id);
+    setNodes([]);
+    setEdges([]);
+    setHistory([]);
+    setRedoStack([]);
+    setSelectedNodeId(null);
+    setSelectedEdgeId(null);
+    setSelectedNodes([]);
+    setSelectedEdges([]);
+  };
+
+  const reorderFlows = (draggedId, targetId) => {
+    setFlows((prev) => {
+      const draggedIndex = prev.findIndex((f) => f.id === draggedId);
+      const targetIndex = prev.findIndex((f) => f.id === targetId);
+      if (draggedIndex < 0 || targetIndex < 0) return prev;
+      
+      const newFlows = [...prev];
+      const [draggedItem] = newFlows.splice(draggedIndex, 1);
+      newFlows.splice(targetIndex, 0, draggedItem);
+      return newFlows;
+    });
+  };
 
   const pushToHistory = (newNodes, newEdges) => {
     setHistory((h) => [...h, { nodes: newNodes, edges: newEdges }]);
@@ -254,27 +474,46 @@ export default function App() {
     setSelectedEdgeId(null);
   };
 
-  const handleFileLoad = (file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const { nodes: loadedNodes, edges: loadedEdges } = JSON.parse(e.target.result);
-        if (loadedNodes && loadedEdges) {
-          const fixedNodes = loadedNodes.map((n) => ({
-            ...n,
-            width: n.width || DEFAULT_NODE_WIDTH,
-            height: n.height || DEFAULT_NODE_HEIGHT,
-          }));
-          setNodes(fixedNodes);
-          setEdges(loadedEdges);
-          pushToHistory(fixedNodes, loadedEdges);
-        }
-      } catch (err) {
-        console.error("Invalid flow file:", err);
-        alert("Invalid flow JSON file");
+  const onLoadFlow = (fileContent, fileName = "") => {
+    try {
+      const { nodes: loadedNodes, edges: loadedEdges } = JSON.parse(fileContent);
+      if (loadedNodes && loadedEdges) {
+        const fixedNodes = loadedNodes.map((n) => ({
+          ...n,
+          width: n.width || DEFAULT_NODE_WIDTH,
+          height: n.height || DEFAULT_NODE_HEIGHT,
+        }));
+        
+        let targetName = fileName ? fileName.replace(/\.json$/i, "") : `flow-${Date.now()}`;
+        
+        const newFlow = {
+          id: `flow-${Date.now()}`,
+          name: targetName,
+          nodes: fixedNodes,
+          edges: loadedEdges,
+        };
+
+        setFlows((prev) => {
+          const updatedFlows = prev.map((f) =>
+            f.id === activeFlowId ? { ...f, nodes, edges } : f
+          );
+          return [...updatedFlows, newFlow];
+        });
+
+        setNodes(fixedNodes);
+        setEdges(loadedEdges);
+        setActiveFlowId(newFlow.id);
+        setHistory([]);
+        setRedoStack([]);
+        setSelectedNodeId(null);
+        setSelectedEdgeId(null);
+        setSelectedNodes([]);
+        setSelectedEdges([]);
       }
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      console.error("Invalid flow file:", err);
+      alert("Invalid flow JSON file");
+    }
   };
 
   // =============================
@@ -354,6 +593,9 @@ export default function App() {
           onRemoveAllNodes={handleRemoveAllNodes}
           viewOptions={viewOptions}
           onToggleView={toggleViewOption}
+          onNewFlow={addFlow}
+          onLoadFlow={onLoadFlow}
+          activeFlowName={flows.find(f => f.id === activeFlowId)?.name || "Flow-1"}
         />
       </div>
 
@@ -387,52 +629,68 @@ export default function App() {
             flexGrow: 1,
             border: `1px solid ${themeColors.border}`,
             height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            minWidth: 0,
           }}
         >
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onInit={setReactFlowInstance} // ✅ Capture instance
-            nodeTypes={nodeTypes}
-            edgeTypes={{ custom: CustomEdge }}
-            onNodeClick={(e, node) => {
-              setSelectedNodeId(node.id);
-              setShowNodeDetails(true);
-            }}
-            onEdgeClick={(e, edge) => {
-              setSelectedEdgeId(edge.id);
-              setSelectedNodeId(null);
-            }}
-            onPaneClick={() => {
-              setShowNodeDetails(false);
-              setSelectedEdgeId(null);
-              setSelectedNodes([]); // 🔥 Clear on pane click
-              setSelectedEdges([]); // 🔥 Clear on pane click
-            }}
-            onSelectionChange={({ nodes: selNodes, edges: selEdges }) => {
-              setSelectedNodes(selNodes); // 🔥 Multi-select
-              setSelectedEdges(selEdges); // 🔥 Multi-select
-              setSelectedNodeId(selNodes[0]?.id || null);
-              setSelectedEdgeId(selEdges[0]?.id || null);
-            }}
-            selectionOnDrag={true} // 🔥 Enable selection box
-            selectionMode="partial" // 🔥 Select nodes even if only partially covered
-            panOnDrag={[1, 2]} // 🔥 Allow panning with middle/right mouse or space drag
-            minZoom={0.1}
-            maxZoom={2}
-            zoomOnScroll
-            zoomOnPinch
-            fitView
-          >
-            {viewOptions.minimap && <MiniMap nodeColor={(n) => n.color || themeColors.nodeBg} />}
-            {viewOptions.controls && <Controls />}
-            {viewOptions.background && (
-              <Background color={themeColors.text} variant={BackgroundVariant.Dots} />
-            )}
-          </ReactFlow>
+          <div style={{ flexGrow: 1, position: "relative" }}>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onInit={setReactFlowInstance} // ✅ Capture instance
+              nodeTypes={nodeTypes}
+              edgeTypes={{ custom: CustomEdge }}
+              onNodeClick={(e, node) => {
+                setSelectedNodeId(node.id);
+                setShowNodeDetails(true);
+              }}
+              onEdgeClick={(e, edge) => {
+                setSelectedEdgeId(edge.id);
+                setSelectedNodeId(null);
+              }}
+              onPaneClick={() => {
+                setShowNodeDetails(false);
+                setSelectedEdgeId(null);
+                setSelectedNodes([]); // Clear on pane click
+                setSelectedEdges([]); // Clear on pane click
+              }}
+              onSelectionChange={({ nodes: selNodes, edges: selEdges }) => {
+                setSelectedNodes(selNodes); //  Multi-select
+                setSelectedEdges(selEdges); //  Multi-select
+                setSelectedNodeId(selNodes[0]?.id || null);
+                setSelectedEdgeId(selEdges[0]?.id || null);
+              }}
+              selectionOnDrag={true} // Enable selection box
+              selectionMode="partial" // Select nodes even if only partially covered
+              panOnDrag={[1, 2]} // Allow panning with middle/right mouse or space drag
+              minZoom={0.1}
+              maxZoom={2}
+              zoomOnScroll
+              zoomOnPinch
+              fitView
+            >
+              {viewOptions.minimap && <MiniMap nodeColor={(n) => n.color || themeColors.nodeBg} />}
+              {viewOptions.controls && <Controls />}
+              {viewOptions.background && (
+                <Background color={themeColors.text} variant={BackgroundVariant.Dots} />
+              )}
+            </ReactFlow>
+          </div>
+          <FlowTabs
+            flows={flows}
+            activeFlowId={activeFlowId}
+            onSwitch={switchFlow}
+            onAdd={addFlow}
+            onRename={renameFlow}
+            onDuplicate={duplicateFlow}
+            onRemove={removeFlow}
+            onReorder={reorderFlows}
+            onDeleteAll={deleteAllFlows}
+          />
         </div>
 
         {showNodeDetails && selectedNode && selectedNode.type !== "databaseSchema" && (
@@ -440,7 +698,7 @@ export default function App() {
             node={selectedNode}
             updateNodeField={updateNodeField}
             updateNodeData={updateNodeData}
-            deleteNode={() => deleteNodes(selectedNode.id)} // 🔥 Updated
+            deleteNode={() => deleteNodes(selectedNode.id)}
             onClosePanel={() => setShowNodeDetails(false)}
           />
         )}
@@ -449,7 +707,7 @@ export default function App() {
           <DatabaseNodeDetailsPanel
             node={selectedNode}
             updateNodeData={updateNodeData}
-            deleteNode={() => deleteNodes(selectedNode.id)} // 🔥 Updated
+            deleteNode={() => deleteNodes(selectedNode.id)} 
             onClosePanel={() => setShowNodeDetails(false)}
           />
         )}
@@ -459,11 +717,22 @@ export default function App() {
             edge={selectedEdge}
             updateEdgeData={updateEdgeData}
             updateEdgeType={updateEdgeType}
-            deleteEdge={() => deleteEdges(selectedEdge.id)} // 🔥 Updated
+            deleteEdge={() => deleteEdges(selectedEdge.id)} 
             onClosePanel={() => setSelectedEdgeId(null)}
           />
         )}
       </div>
+
+      <AppModal
+        show={appModal.show}
+        title={appModal.title}
+        message={appModal.message}
+        type={appModal.type}
+        confirmText={appModal.confirmText}
+        cancelText={appModal.cancelText}
+        onConfirm={appModal.onConfirm}
+        onClose={() => setAppModal({ show: false })}
+      />
     </div>
   );
 }

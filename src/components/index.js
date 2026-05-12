@@ -3,6 +3,7 @@ import NodeDetailsPanel from "./NodeDetailsPanel";
 import Toolbar  from "./ToolBar";
 import Header from "./Header";  
 import AppModal from "./AppModal";
+import FlowTabs from "./FlowTabs";
 
 export const componentTypes = {
   sideBar: Sidebar,
@@ -10,6 +11,7 @@ export const componentTypes = {
   nodeDetailsPanel: NodeDetailsPanel,
   header: Header,
   appModal: AppModal,
+  flowTabs: FlowTabs,
 };
 
 export const availablecomponents = [

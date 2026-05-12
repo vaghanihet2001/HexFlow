@@ -17,6 +17,9 @@ export default function Toolbar({
   onRemoveAllNodes,
   viewOptions,
   onToggleView,
+  onNewFlow,
+  onLoadFlow,
+  activeFlowName = "Flow-1",
 }) {
   const fileInputRef = useRef();
   const nodeImportRef = useRef();
@@ -35,7 +38,7 @@ export default function Toolbar({
     if ("showSaveFilePicker" in window) {
       try {
         const handle = await window.showSaveFilePicker({
-          suggestedName: "graph.json",
+          suggestedName: `${activeFlowName}.json`,
           types: [
             {
               description: "JSON File",
@@ -63,7 +66,7 @@ export default function Toolbar({
     const a = document.createElement("a");
 
     a.href = url;
-    a.download = "graph.json";
+    a.download = `${activeFlowName}.json`;
     a.click();
 
     URL.revokeObjectURL(url);
@@ -78,40 +81,21 @@ export default function Toolbar({
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      try {
-        const graph = JSON.parse(e.target.result);
-        setNodes(graph.nodes || []);
-        setEdges(graph.edges || []);
-      } catch (err) {
-        setModal({
-          show: true,
-          title: "Invalid JSON",
-          message: "The selected file is not a valid graph file.",
-          type: "error",
-          confirmText: "Close",
-        });
+      if (onLoadFlow) {
+        onLoadFlow(e.target.result, file.name);
       }
     };
     reader.readAsText(file);
+    event.target.value = null; // reset to allow same file import
   };
 
   // =============================
-  // 🆕 CREATE NEW GRAPH (Show Modal)
+  // 🆕 CREATE NEW GRAPH
   // =============================
-  const confirmNewGraph = () => {
-    setModal({
-      show: true,
-      type: "confirm",
-      title: "Start New Graph?",
-      message: "All unsaved changes will be lost. Continue?",
-      confirmText: "Yes, Start New",
-      cancelText: "Cancel",
-      onConfirm: () => {
-        setNodes([]);
-        setEdges([]);
-        setModal({ show: false });
-      },
-    });
+  const handleNewGraph = () => {
+    if (onNewFlow) {
+      onNewFlow();
+    }
   };
 
   // =============================
@@ -173,7 +157,7 @@ export default function Toolbar({
       if ("showSaveFilePicker" in window) {
         try {
           const handle = await window.showSaveFilePicker({
-            suggestedName: "graph.png",
+            suggestedName: `${activeFlowName}.png`,
             types: [
               {
                 description: "PNG Image",
@@ -200,7 +184,7 @@ export default function Toolbar({
       // Otherwise fallback auto-download
       const a = document.createElement("a");
       a.href = dataUrl;
-      a.download = "graph.png";
+      a.download = `${activeFlowName}.png`;
       a.click();
 
     } catch (err) {
@@ -235,7 +219,7 @@ export default function Toolbar({
           size="sm"
           menuVariant={theme === "light" ? "light" : "dark"}
         >
-          <Dropdown.Item onClick={confirmNewGraph}>New</Dropdown.Item>
+          <Dropdown.Item onClick={handleNewGraph}>New Flow</Dropdown.Item>
           <Dropdown.Item onClick={handleSave}>Save</Dropdown.Item>
           <Dropdown.Item onClick={() => fileInputRef.current.click()}>
             Load
