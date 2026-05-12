@@ -44,6 +44,9 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const [copiedNodes, setCopiedNodes] = useState([]);
+  const [copiedEdges, setCopiedEdges] = useState([]); // 🔥 Added for multi-copy
+  const [selectedNodes, setSelectedNodes] = useState([]); // 🔥 Added for multi-select
+  const [selectedEdges, setSelectedEdges] = useState([]); // 🔥 Added for multi-select
   const [reactFlowInstance, setReactFlowInstance] = useState(null); // ✅ NEW
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0); // 🔥 Triggers sidebar reload
 
@@ -81,7 +84,7 @@ export default function App() {
   };
 
   // Flow handlers
-  const { addNode: baseAddNode, onConnect, deleteNode, deleteEdge } = useFlowHandlers(
+  const { addNode: baseAddNode, onConnect, deleteNodes, deleteEdges } = useFlowHandlers(
     nodes,
     setNodes,
     edges,
@@ -152,23 +155,61 @@ export default function App() {
   // 🧠 Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && selectedNodeId) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && selectedNodes.length) {
         e.preventDefault();
-        const nodeToCopy = nodes.find((n) => n.id === selectedNodeId);
-        if (nodeToCopy) setCopiedNodes([nodeToCopy]);
+        setCopiedNodes(selectedNodes);
+        
+        // Find edges that connect two nodes in the current selection
+        const internalEdges = edges.filter(
+          (e) =>
+            selectedNodes.some((n) => n.id === e.source) &&
+            selectedNodes.some((n) => n.id === e.target)
+        );
+        setCopiedEdges(internalEdges);
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v" && copiedNodes.length) {
         e.preventDefault();
-        const newNodes = copiedNodes.map((node) => ({
-          ...node,
-          id: `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          position: { x: node.position.x + 20, y: node.position.y + 20 },
-          width: node.width || DEFAULT_NODE_WIDTH,
-          height: node.height || DEFAULT_NODE_HEIGHT,
-          data: { ...node.data, instanceId: Date.now() + Math.random() },
+
+        const nodeIdMap = {};
+        const offset = 80;
+
+        // 1. Create new nodes with fresh IDs and update map
+        const newNodes = copiedNodes.map((node, index) => {
+          const newId = `node-${Date.now()}-${index}-${Math.floor(Math.random() * 1000)}`;
+          nodeIdMap[node.id] = newId;
+          return {
+            ...node,
+            id: newId,
+            selected: true,
+            position: { x: node.position.x + offset, y: node.position.y + offset },
+            data: { ...node.data, instanceId: Date.now() + Math.random() },
+          };
+        });
+
+        // 2. Create new edges using the ID map
+        const newEdges = copiedEdges.map((edge, index) => ({
+          ...edge,
+          id: `e-${Date.now()}-${index}-${Math.floor(Math.random() * 1000)}`,
+          source: nodeIdMap[edge.source],
+          target: nodeIdMap[edge.target],
+          selected: true,
         }));
+
         pushToHistory(nodes, edges);
-        setNodes((nds) => [...nds, ...newNodes]);
-        setSelectedNodeId(newNodes[0].id);
+
+        // 3. Deselect old nodes/edges and add new ones
+        setNodes((nds) => [
+          ...nds.map((n) => ({ ...n, selected: false })),
+          ...newNodes,
+        ]);
+        setEdges((eds) => [
+          ...eds.map((e) => ({ ...e, selected: false })),
+          ...newEdges,
+        ]);
+
+        // 4. Update selection state to ONLY the new ones
+        setSelectedNodes(newNodes);
+        setSelectedEdges(newEdges);
+        setSelectedNodeId(newNodes[0]?.id || null);
       } else if (e.ctrlKey && e.key === "z" && !e.shiftKey) {
         e.preventDefault();
         undo();
@@ -176,13 +217,20 @@ export default function App() {
         e.preventDefault();
         redo();
       } else if (e.key === "Delete") {
-        if (selectedNodeId) deleteNode(selectedNodeId);
-        else if (selectedEdgeId) deleteEdge(selectedEdgeId);
+        if (selectedNodes.length) {
+          deleteNodes(selectedNodes.map((n) => n.id));
+          setSelectedNodes([]);
+          setSelectedNodeId(null);
+        } else if (selectedEdges.length) {
+          deleteEdges(selectedEdges.map((e) => e.id));
+          setSelectedEdges([]);
+          setSelectedEdgeId(null);
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedNodeId, selectedEdgeId, nodes, edges, history, redoStack, copiedNodes]);
+  }, [selectedNodes, selectedEdges, nodes, edges, history, redoStack, copiedNodes, copiedEdges]);
 
   const undo = () => {
     if (!history.length) return;
@@ -361,11 +409,18 @@ export default function App() {
             onPaneClick={() => {
               setShowNodeDetails(false);
               setSelectedEdgeId(null);
+              setSelectedNodes([]); // 🔥 Clear on pane click
+              setSelectedEdges([]); // 🔥 Clear on pane click
             }}
             onSelectionChange={({ nodes: selNodes, edges: selEdges }) => {
+              setSelectedNodes(selNodes); // 🔥 Multi-select
+              setSelectedEdges(selEdges); // 🔥 Multi-select
               setSelectedNodeId(selNodes[0]?.id || null);
               setSelectedEdgeId(selEdges[0]?.id || null);
             }}
+            selectionOnDrag={true} // 🔥 Enable selection box
+            selectionMode="partial" // 🔥 Select nodes even if only partially covered
+            panOnDrag={[1, 2]} // 🔥 Allow panning with middle/right mouse or space drag
             minZoom={0.1}
             maxZoom={2}
             zoomOnScroll
@@ -385,7 +440,7 @@ export default function App() {
             node={selectedNode}
             updateNodeField={updateNodeField}
             updateNodeData={updateNodeData}
-            deleteNode={deleteNode}
+            deleteNode={() => deleteNodes(selectedNode.id)} // 🔥 Updated
             onClosePanel={() => setShowNodeDetails(false)}
           />
         )}
@@ -394,7 +449,7 @@ export default function App() {
           <DatabaseNodeDetailsPanel
             node={selectedNode}
             updateNodeData={updateNodeData}
-            deleteNode={deleteNode}
+            deleteNode={() => deleteNodes(selectedNode.id)} // 🔥 Updated
             onClosePanel={() => setShowNodeDetails(false)}
           />
         )}
@@ -404,7 +459,7 @@ export default function App() {
             edge={selectedEdge}
             updateEdgeData={updateEdgeData}
             updateEdgeType={updateEdgeType}
-            deleteEdge={deleteEdge}
+            deleteEdge={() => deleteEdges(selectedEdge.id)} // 🔥 Updated
             onClosePanel={() => setSelectedEdgeId(null)}
           />
         )}

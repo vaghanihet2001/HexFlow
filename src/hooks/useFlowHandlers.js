@@ -106,19 +106,23 @@ export function useFlowHandlers(nodes, setNodes, edges, setEdges, pushToHistory,
     [setEdges]
   );
 
-  const deleteNode = useCallback(
-    (nodeId) => {
+  const deleteNodes = useCallback(
+    (nodeIds) => {
+      const ids = Array.isArray(nodeIds) ? nodeIds : [nodeIds];
+      if (ids.length === 0) return;
       pushToHistory(nodes, edges);
-      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-      setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+      setNodes((nds) => nds.filter((n) => !ids.includes(n.id)));
+      setEdges((eds) => eds.filter((e) => !ids.includes(e.source) && !ids.includes(e.target)));
     },
     [nodes, edges, setNodes, setEdges, pushToHistory]
   );
 
-  const deleteEdge = useCallback(
-    (edgeId) => {
+  const deleteEdges = useCallback(
+    (edgeIds) => {
+      const ids = Array.isArray(edgeIds) ? edgeIds : [edgeIds];
+      if (ids.length === 0) return;
       pushToHistory(nodes, edges);
-      setEdges((eds) => eds.filter((e) => e.id !== edgeId));
+      setEdges((eds) => eds.filter((e) => !ids.includes(e.id)));
     },
     [nodes, edges, setEdges, pushToHistory]
   );
@@ -126,8 +130,8 @@ export function useFlowHandlers(nodes, setNodes, edges, setEdges, pushToHistory,
   return {
     addNode,
     onConnect,
-    deleteNode,
-    deleteEdge,
+    deleteNodes,
+    deleteEdges,
     updateEdgeData,
     updateEdgeType,
   };

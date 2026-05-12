@@ -342,11 +342,15 @@ export default function Toolbar({
 
         >
           <Dropdown.Header>Keyboard Shortcuts</Dropdown.Header>
-          <Dropdown.Item disabled>Ctrl + C → Copy Node</Dropdown.Item>
-          <Dropdown.Item disabled>Ctrl + V → Paste Node</Dropdown.Item>
-          <Dropdown.Item disabled>Delete → Delete Node/Edge</Dropdown.Item>
+          <Dropdown.Item disabled>Ctrl + C → Copy Selected</Dropdown.Item>
+          <Dropdown.Item disabled>Ctrl + V → Paste Selection</Dropdown.Item>
+          <Dropdown.Item disabled>Delete → Delete Selection</Dropdown.Item>
           <Dropdown.Item disabled>Ctrl + Z → Undo</Dropdown.Item>
           <Dropdown.Item disabled>Ctrl + Shift + Z → Redo</Dropdown.Item>
+          <Dropdown.Divider />
+          <Dropdown.Header>Mouse Controls</Dropdown.Header>
+          <Dropdown.Item disabled>Right/Middle Click Drag → Hand Tool (Pan)</Dropdown.Item>
+          <Dropdown.Item disabled>Left Click Drag → Rectangle Select</Dropdown.Item>
         </DropdownButton>
       </div>
 
