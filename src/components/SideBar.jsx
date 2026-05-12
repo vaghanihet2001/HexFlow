@@ -12,6 +12,7 @@ export default function Sidebar({
   onAddNode,
   onSaveCustomNode,
   onDeleteCustomNode,
+  refreshKey,
 }) {
   const [search, setSearch] = useState("");
   const [customNodes, setCustomNodes] = useState([]);
@@ -22,7 +23,6 @@ export default function Sidebar({
   const [loadingNodes, setLoadingNodes] = useState(true);
 
   // 🔥 Global AppModal states
-  const [confirmResetModal, setConfirmResetModal] = useState({ show: false });
   const [confirmDeleteNodeModal, setConfirmDeleteNodeModal] = useState({ show: false }); // ⭐ NEW
 
   const { themeColors } = useTheme();
@@ -43,7 +43,7 @@ export default function Sidebar({
       }
     };
     load();
-  }, []);
+  }, [refreshKey]);
 
   // ========================================
   // 💾 Save custom node
@@ -105,41 +105,6 @@ export default function Sidebar({
       setConfirmDeleteNodeModal({ show: false });
     } catch (err) {
       console.error("Failed to delete custom node:", err);
-    } finally {
-      setLoadingNodes(false);
-    }
-  };
-
-  // ========================================
-  // Reset nodes → AppModal
-  // ========================================
-  const openResetConfirm = () => {
-    setConfirmResetModal({
-      show: true,
-      title: "Remove All Custom Nodes?",
-      message: "This will permanently delete all your custom nodes.",
-      type: "confirm",
-      confirmText: "Remove",
-      cancelText: "Cancel",
-      onConfirm: handleResetConfirm,
-    });
-  };
-
-  const handleResetConfirm = async () => {
-    try {
-      setLoadingNodes(true);
-      await clearAllNodes();
-      setCustomNodes([]);
-      setConfirmResetModal({ show: false });
-    } catch (err) {
-      console.error("Failed to reset:", err);
-      setConfirmResetModal({
-        show: true,
-        title: "Reset Failed",
-        message: err.message || "Something went wrong.",
-        type: "error",
-        confirmText: "Close",
-      });
     } finally {
       setLoadingNodes(false);
     }
@@ -365,10 +330,6 @@ export default function Sidebar({
               + Create Node
             </Button>
 
-            <Button variant="danger" className="w-100" onClick={openResetConfirm}>
-              Remove Nodes
-            </Button>
-
             <footer
               style={{
                 fontSize: "0.75rem",
@@ -388,18 +349,6 @@ export default function Sidebar({
           onClose={() => setShowModal(false)}
           onSave={handleSaveCustomNode}
           editingNode={editNode}
-        />
-
-        {/* Reset All Custom Nodes */}
-        <AppModal
-          show={confirmResetModal.show}
-          title={confirmResetModal.title}
-          message={confirmResetModal.message}
-          type={confirmResetModal.type}
-          confirmText={confirmResetModal.confirmText}
-          cancelText={confirmResetModal.cancelText}
-          onConfirm={confirmResetModal.onConfirm}
-          onClose={() => setConfirmResetModal({ show: false })}
         />
 
         {/* NEW: Delete Individual Node */}

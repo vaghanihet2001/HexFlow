@@ -5,8 +5,18 @@ import * as htmlToImage from "html-to-image";
 import { useTheme } from "./ThemeContext";
 import AppModal from "./AppModal";
 
-export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
+export default function Toolbar({
+  nodes,
+  edges,
+  setNodes,
+  setEdges,
+  onExportNodes,
+  onImportNodes,
+  onFetchDefaultNodes,
+  onRemoveAllNodes,
+}) {
   const fileInputRef = useRef();
+  const nodeImportRef = useRef();
   const { theme, themeColors } = useTheme();
 
   // 🔥 State for custom confirmation modal
@@ -96,6 +106,24 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
       onConfirm: () => {
         setNodes([]);
         setEdges([]);
+        setModal({ show: false });
+      },
+    });
+  };
+
+  // =============================
+  // 🗑 REMOVE ALL NODES (Show Modal)
+  // =============================
+  const confirmRemoveAllNodes = () => {
+    setModal({
+      show: true,
+      type: "confirm",
+      title: "Remove All Custom Nodes?",
+      message: "This will permanently delete all your custom nodes. Continue?",
+      confirmText: "Remove All",
+      cancelText: "Cancel",
+      onConfirm: () => {
+        onRemoveAllNodes();
         setModal({ show: false });
       },
     });
@@ -214,6 +242,27 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
           </Dropdown.Item>
         </DropdownButton>
 
+        {/* Nodes Menu */}
+        <DropdownButton
+          id="dropdown-nodes"
+          title="Nodes"
+          variant={theme === "light" ? "secondary" : "dark"}
+          size="sm"
+          menuVariant={theme === "light" ? "light" : "dark"}
+        >
+          <Dropdown.Item onClick={onFetchDefaultNodes}>
+            Fetch Default Nodes
+          </Dropdown.Item>
+          <Dropdown.Item onClick={onExportNodes}>Export Nodes</Dropdown.Item>
+          <Dropdown.Item onClick={() => nodeImportRef.current.click()}>
+            Import Nodes
+          </Dropdown.Item>
+          <Dropdown.Divider />
+          <Dropdown.Item className="text-danger" onClick={confirmRemoveAllNodes}>
+            Remove All Nodes
+          </Dropdown.Item>
+        </DropdownButton>
+
         {/* Hidden file input for loading */}
         <input
           type="file"
@@ -221,6 +270,29 @@ export default function Toolbar({ nodes, edges, setNodes, setEdges }) {
           style={{ display: "none" }}
           accept=".json"
           onChange={handleLoad}
+        />
+
+        {/* Hidden file input for importing nodes */}
+        <input
+          type="file"
+          ref={nodeImportRef}
+          style={{ display: "none" }}
+          accept=".json"
+          onChange={(e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              try {
+                const nodesToImport = JSON.parse(event.target.result);
+                onImportNodes(nodesToImport);
+              } catch (err) {
+                alert("Invalid JSON file");
+              }
+            };
+            reader.readAsText(file);
+            e.target.value = null; // reset to allow same file import
+          }}
         />
 
         {/* Help Menu */}

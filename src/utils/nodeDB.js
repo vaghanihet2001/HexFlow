@@ -27,10 +27,16 @@ function openDB() {
 // they get an empty sidebar instead of the defaults coming back.
 const SEEDED_KEY = "hexflow_db_seeded";
 
+/** Get the default nodes from the bundled JSON file */
+export async function getDefaultNodes() {
+  const { default: seed } = await import("../../customNodes.json");
+  return seed;
+}
+
 async function seedOnFirstLaunch(db) {
   if (localStorage.getItem(SEEDED_KEY)) return; // already seeded before
 
-  const { default: seed } = await import("../../customNodes.json");
+  const seed = await getDefaultNodes();
   const tx = db.transaction(STORE, "readwrite");
   const store = tx.objectStore(STORE);
   seed.forEach((node) => store.put(node));
@@ -88,5 +94,17 @@ export async function clearAllNodes() {
     const req = tx.objectStore(STORE).clear();
     req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
+  });
+}
+
+/** Bulk upsert nodes into the store */
+export async function bulkUpsertNodes(nodes) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, "readwrite");
+    const store = tx.objectStore(STORE);
+    nodes.forEach((node) => store.put(node));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
   });
 }

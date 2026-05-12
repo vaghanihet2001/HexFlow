@@ -17,6 +17,7 @@ import EdgeDetailsPanel from "./components/EdgeDetailsPanel";
 import DatabaseNodeDetailsPanel from "./components/DatabaseNodeDetailsPanel";
 import { useFlowHandlers } from "./hooks/useFlowHandlers";
 import { useTheme } from "./components/ThemeContext";
+import { getAllNodes, bulkUpsertNodes, getDefaultNodes, clearAllNodes } from "./utils/nodeDB";
 
 const Sidebar = componentTypes.sideBar;
 const Toolbar = componentTypes.toolBar;
@@ -44,6 +45,7 @@ export default function App() {
   const [redoStack, setRedoStack] = useState([]);
   const [copiedNodes, setCopiedNodes] = useState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState(null); // ✅ NEW
+  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0); // 🔥 Triggers sidebar reload
 
   // 1️⃣ Load from localStorage once on mount
   useEffect(() => {
@@ -220,6 +222,55 @@ export default function App() {
     reader.readAsText(file);
   };
 
+  // =============================
+  // 📦 CUSTOM NODE ACTIONS
+  // =============================
+  const handleExportNodes = async () => {
+    try {
+      const allCustomNodes = await getAllNodes();
+      const json = JSON.stringify(allCustomNodes, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "custom_nodes.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Export nodes failed:", err);
+    }
+  };
+
+  const handleImportNodes = async (nodesToImport) => {
+    try {
+      if (!Array.isArray(nodesToImport)) throw new Error("Invalid data format");
+      await bulkUpsertNodes(nodesToImport);
+      setSidebarRefreshKey((prev) => prev + 1);
+    } catch (err) {
+      console.error("Import nodes failed:", err);
+      alert("Failed to import nodes: " + err.message);
+    }
+  };
+
+  const handleFetchDefaultNodes = async () => {
+    try {
+      const defaults = await getDefaultNodes();
+      await bulkUpsertNodes(defaults);
+      setSidebarRefreshKey((prev) => prev + 1);
+    } catch (err) {
+      console.error("Fetch default nodes failed:", err);
+    }
+  };
+
+  const handleRemoveAllNodes = async () => {
+    try {
+      await clearAllNodes();
+      setSidebarRefreshKey((prev) => prev + 1);
+    } catch (err) {
+      console.error("Remove all nodes failed:", err);
+    }
+  };
+
   return (
     <div
       style={{
@@ -233,7 +284,16 @@ export default function App() {
     >
       <Header />
       <div style={{ height: `${TOOLBAR_HEIGHT}px`, flexShrink: 0 }}>
-        <Toolbar nodes={nodes} edges={edges} setNodes={setNodes} setEdges={setEdges} />
+        <Toolbar
+          nodes={nodes}
+          edges={edges}
+          setNodes={setNodes}
+          setEdges={setEdges}
+          onExportNodes={handleExportNodes}
+          onImportNodes={handleImportNodes}
+          onFetchDefaultNodes={handleFetchDefaultNodes}
+          onRemoveAllNodes={handleRemoveAllNodes}
+        />
       </div>
 
       <div
@@ -248,6 +308,7 @@ export default function App() {
           <Sidebar
             availableNodes={allNodes}
             onAddNode={addNode}
+            refreshKey={sidebarRefreshKey} // 🔥 added
             onSaveCustomNode={(node) => {
               setAllNodes((prev) => {
                 const exists = prev.find((n) => n.id === node.id);
