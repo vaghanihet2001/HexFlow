@@ -47,6 +47,13 @@ export default function App() {
   const [reactFlowInstance, setReactFlowInstance] = useState(null); // ✅ NEW
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0); // 🔥 Triggers sidebar reload
 
+  // 👓 View Options
+  const [viewOptions, setViewOptions] = useState({
+    minimap: true,
+    controls: true,
+    background: true,
+  });
+
   // 1️⃣ Load from localStorage once on mount
   useEffect(() => {
     const saved = localStorage.getItem("flowState");
@@ -271,6 +278,10 @@ export default function App() {
     }
   };
 
+  const toggleViewOption = (option) => {
+    setViewOptions((prev) => ({ ...prev, [option]: !prev[option] }));
+  };
+
   return (
     <div
       style={{
@@ -293,6 +304,8 @@ export default function App() {
           onImportNodes={handleImportNodes}
           onFetchDefaultNodes={handleFetchDefaultNodes}
           onRemoveAllNodes={handleRemoveAllNodes}
+          viewOptions={viewOptions}
+          onToggleView={toggleViewOption}
         />
       </div>
 
@@ -359,9 +372,11 @@ export default function App() {
             zoomOnPinch
             fitView
           >
-            <MiniMap nodeColor={(n) => n.color || themeColors.nodeBg} />
-            <Controls />
-            <Background color={themeColors.text} variant={BackgroundVariant.Dots} />
+            {viewOptions.minimap && <MiniMap nodeColor={(n) => n.color || themeColors.nodeBg} />}
+            {viewOptions.controls && <Controls />}
+            {viewOptions.background && (
+              <Background color={themeColors.text} variant={BackgroundVariant.Dots} />
+            )}
           </ReactFlow>
         </div>
 

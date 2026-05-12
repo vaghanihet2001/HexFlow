@@ -1,6 +1,7 @@
 // src/components/Toolbar.jsx
 import React, { useRef, useState } from "react";
 import { Button, Dropdown, DropdownButton } from "react-bootstrap";
+import { FaCheck } from "react-icons/fa";
 import * as htmlToImage from "html-to-image";
 import { useTheme } from "./ThemeContext";
 import AppModal from "./AppModal";
@@ -14,6 +15,8 @@ export default function Toolbar({
   onImportNodes,
   onFetchDefaultNodes,
   onRemoveAllNodes,
+  viewOptions,
+  onToggleView,
 }) {
   const fileInputRef = useRef();
   const nodeImportRef = useRef();
@@ -260,6 +263,40 @@ export default function Toolbar({
           <Dropdown.Divider />
           <Dropdown.Item className="text-danger" onClick={confirmRemoveAllNodes}>
             Remove All Nodes
+          </Dropdown.Item>
+        </DropdownButton>
+
+        {/* View Menu */}
+        <DropdownButton
+          id="dropdown-view"
+          title="View"
+          variant={theme === "light" ? "secondary" : "dark"}
+          size="sm"
+          menuVariant={theme === "light" ? "light" : "dark"}
+        >
+          <Dropdown.Item onClick={() => onToggleView("minimap")}>
+            <div className="d-flex align-items-center" style={{ minWidth: "150px" }}>
+              <div style={{ width: "20px" }}>
+                {viewOptions.minimap && <FaCheck size={12} />}
+              </div>
+              <span>Show Minimap</span>
+            </div>
+          </Dropdown.Item>
+          <Dropdown.Item onClick={() => onToggleView("controls")}>
+            <div className="d-flex align-items-center">
+              <div style={{ width: "20px" }}>
+                {viewOptions.controls && <FaCheck size={12} />}
+              </div>
+              <span>Show Controls</span>
+            </div>
+          </Dropdown.Item>
+          <Dropdown.Item onClick={() => onToggleView("background")}>
+            <div className="d-flex align-items-center">
+              <div style={{ width: "20px" }}>
+                {viewOptions.background && <FaCheck size={12} />}
+              </div>
+              <span>Show Background</span>
+            </div>
           </Dropdown.Item>
         </DropdownButton>
 
