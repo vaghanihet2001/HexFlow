@@ -323,7 +323,9 @@ export default function App() {
     baseAddNode(newNode);
   };
 
-  const updateNodeField = (nodeId, fieldId, key, value) => {
+  const updateNodeField = React.useCallback((nodeId, fieldId, key, value) => {
+    setSelectedNodeId(nodeId);
+    setShowNodeDetails(true);
     setNodes((nds) =>
       nds.map((n) =>
         n.id === nodeId
@@ -339,15 +341,17 @@ export default function App() {
           : n
       )
     );
-  };
+  }, [setNodes, setSelectedNodeId, setShowNodeDetails]);
 
-  const updateNodeData = (nodeId, key, value) => {
+  const updateNodeData = React.useCallback((nodeId, key, value) => {
+    setSelectedNodeId(nodeId);
+    setShowNodeDetails(true);
     setNodes((nds) =>
       nds.map((n) =>
         n.id === nodeId ? { ...n, data: { ...n.data, [key]: value } } : n
       )
     );
-  };
+  }, [setNodes, setSelectedNodeId, setShowNodeDetails]);
 
   const updateEdgeData = (edgeId, key, value) => {
     setEdges((eds) =>
@@ -569,6 +573,25 @@ export default function App() {
     setViewOptions((prev) => ({ ...prev, [option]: !prev[option] }));
   };
 
+  // =============================
+  // 🚀 NODE TYPES WITH UPDATE HANDLERS
+  // =============================
+  const memoizedNodeTypes = React.useMemo(() => ({
+    customNode: (props) => (
+      <nodeTypes.customNode 
+        {...props} 
+        updateNodeField={updateNodeField} 
+        updateNodeData={updateNodeData} 
+      />
+    ),
+    databaseSchema: (props) => (
+      <nodeTypes.databaseSchema 
+        {...props} 
+        updateNodeData={updateNodeData} 
+      />
+    ),
+  }), [updateNodeField, updateNodeData]);
+
   return (
     <div
       style={{
@@ -642,7 +665,7 @@ export default function App() {
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               onInit={setReactFlowInstance} // ✅ Capture instance
-              nodeTypes={nodeTypes}
+              nodeTypes={memoizedNodeTypes} // ✅ Use memoized nodeTypes
               edgeTypes={{ custom: CustomEdge }}
               onNodeClick={(e, node) => {
                 setSelectedNodeId(node.id);

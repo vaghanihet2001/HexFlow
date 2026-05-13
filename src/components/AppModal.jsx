@@ -44,6 +44,16 @@ export default function AppModal({
       backdrop="static"      // prevent accidental close
       keyboard={true}
     >
+      <style>
+        {`
+          .modal {
+            z-index: 10001 !important;
+          }
+          .modal-backdrop {
+            z-index: 10000 !important;
+          }
+        `}
+      </style>
       <Modal.Header
         closeButton
         style={{
