@@ -145,6 +145,8 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
     <Modal
       show={show}
       onHide={saving ? null : onClose}
+      centered
+      scrollable
       size="lg"
       backdrop="static"
       keyboard={!saving}
@@ -161,12 +163,40 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
           {`
             .modal-header .btn-close {
               opacity: 1 !important;
-              width: 26px !important;
-              height: 26px !important;
-              background-size: 22px 22px !important;
+              width: 22px !important;
+              height: 22px !important;
+              background-size: 18px 18px !important;
               background-position: center;
               background-repeat: no-repeat;
               background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='red' viewBox='0 0 24 24'%3E%3Cpath d='M18.3 5.71a1 1 0 0 0-1.41 0L12 10.59 7.11 5.7A1 1 0 0 0 5.7 7.11L10.59 12l-4.9 4.89a1 1 0 1 0 1.41 1.42L12 13.41l4.89 4.9a1 1 0 0 0 1.42-1.41L13.41 12l4.9-4.89a1 1 0 0 0-.01-1.4z'/%3E%3C/svg%3E");
+              transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out !important;
+              border-radius: 4px !important;
+            }
+            .modal-header .btn-close:hover {
+              transform: scale(1.15) !important;
+              background-color: rgba(255, 0, 0, 0.15) !important;
+            }
+            /* Increase z-index to stay above sidebar elements (z-index 9999) */
+            .modal {
+              z-index: 10001 !important;
+            }
+            .modal-backdrop {
+              z-index: 10000 !important;
+            }
+            
+            /* Custom Scrollbar for Modal Body */
+            .modal-body::-webkit-scrollbar {
+              width: 8px;
+            }
+            .modal-body::-webkit-scrollbar-track {
+              background: ${themeColors.cardBg};
+            }
+            .modal-body::-webkit-scrollbar-thumb {
+              background: ${themeColors.border};
+              border-radius: 10px;
+            }
+            .modal-body::-webkit-scrollbar-thumb:hover {
+              background: ${themeColors.primary};
             }
           `}
         </style>
@@ -177,6 +207,8 @@ export default function NodeBuilderModal({ show, onClose, onSave, editingNode })
         style={{
           background: themeColors.cardBg,
           color: themeColors.text,
+          maxHeight: "75vh",
+          overflowY: "auto",
 
           "--bs-body-bg": themeColors.cardBg,
           "--bs-body-color": themeColors.text,

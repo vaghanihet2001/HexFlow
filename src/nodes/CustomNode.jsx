@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Handle, Position, NodeResizer } from "reactflow";
 
-export default function CustomNode({ id, data, selected }) {
+export default function CustomNode({ id, data, selected, updateNodeField, updateNodeData }) {
   const [nodeHeight, setNodeHeight] = useState(100);
 
   useEffect(() => {
@@ -48,7 +48,21 @@ export default function CustomNode({ id, data, selected }) {
 
       {/* Node title */}
       <div>
-        <strong>{data.label}</strong>
+        <input
+          type="text"
+          className="nodrag"
+          value={data.label || ""}
+          onChange={(e) => updateNodeData(id, "label", e.target.value)}
+          style={{
+            fontWeight: "bold",
+            width: "100%",
+            background: "transparent",
+            border: "none",
+            outline: "none",
+            fontSize: "14px",
+            padding: "0",
+          }}
+        />
       </div>
 
       {/* Render visible fields */}
@@ -72,9 +86,9 @@ export default function CustomNode({ id, data, selected }) {
             {field.type === "text" && (
               <input
                 type="text"
-                className="form-control"
+                className="form-control shadow-none nodrag"
                 value={field.value || ""}
-                disabled
+                onChange={(e) => updateNodeField(id, field.id, "value", e.target.value)}
                 style={{ fontSize: "12px", padding: "3px 6px" }}
               />
             )}
@@ -82,9 +96,9 @@ export default function CustomNode({ id, data, selected }) {
             {/* ====================== TEXT AREA ====================== */}
             {field.type === "textarea" && (
               <textarea
-                className="form-control"
+                className="form-control shadow-none nodrag"
                 value={field.value || ""}
-                disabled
+                onChange={(e) => updateNodeField(id, field.id, "value", e.target.value)}
                 style={{
                   fontSize: "12px",
                   padding: "3px 6px",
@@ -99,11 +113,12 @@ export default function CustomNode({ id, data, selected }) {
             {/* ====================== DROPDOWN ====================== */}
             {field.type === "dropdown" && (
               <select
-                className="form-select"
+                className="form-select shadow-none nodrag"
                 value={field.value || ""}
-                disabled
+                onChange={(e) => updateNodeField(id, field.id, "value", e.target.value)}
                 style={{ fontSize: "12px", padding: "3px 6px" }}
               >
+                <option value="" disabled>Select...</option>
                 {field.options?.map((opt) => (
                   <option key={opt} value={opt}>
                     {opt}
@@ -115,14 +130,14 @@ export default function CustomNode({ id, data, selected }) {
             {/* ====================== RADIO ====================== */}
             {field.type === "radio" &&
               field.options?.map((opt) => (
-                <div className="form-check" key={opt} style={{ marginTop: "2px" }}>
+                <div className="form-check nodrag" key={opt} style={{ marginTop: "2px" }}>
                   <input
-                    className="form-check-input"
+                    className="form-check-input shadow-none nodrag"
                     type="radio"
                     name={`${data.instanceId}_${field.id}`}
                     value={opt}
                     checked={field.value === opt}
-                    disabled
+                    onChange={() => updateNodeField(id, field.id, "value", opt)}
                   />
                   <label className="form-check-label">{opt}</label>
                 </div>
@@ -131,12 +146,17 @@ export default function CustomNode({ id, data, selected }) {
             {/* ====================== CHECKBOX ====================== */}
             {field.type === "checkbox" &&
               field.options?.map((opt) => (
-                <div className="form-check" key={opt} style={{ marginTop: "2px" }}>
+                <div className="form-check nodrag" key={opt} style={{ marginTop: "2px" }}>
                   <input
-                    className="form-check-input"
+                    className="form-check-input shadow-none nodrag"
                     type="checkbox"
                     checked={Array.isArray(field.value) && field.value.includes(opt)}
-                    disabled
+                    onChange={(e) => {
+                      let v = [...(field.value || [])];
+                      if (e.target.checked) v.push(opt);
+                      else v = v.filter((x) => x !== opt);
+                      updateNodeField(id, field.id, "value", v);
+                    }}
                   />
                   <label className="form-check-label">{opt}</label>
                 </div>
@@ -145,10 +165,19 @@ export default function CustomNode({ id, data, selected }) {
             {/* ====================== NUMBER ====================== */}
             {field.type === "number" && (
               <input
-                type="text"
+                type="number"
                 value={field.value ?? ""}
-                disabled
-                className="form-control"
+                onChange={(e) =>
+                  updateNodeField(
+                    id,
+                    field.id,
+                    "value",
+                    field.numberType === "int"
+                      ? parseInt(e.target.value)
+                      : parseFloat(e.target.value)
+                  )
+                }
+                className="form-control shadow-none nodrag"
                 style={{
                   fontSize: "12px",
                   padding: "3px 6px",
@@ -159,10 +188,10 @@ export default function CustomNode({ id, data, selected }) {
             {/* ====================== DATE ====================== */}
             {field.type === "date" && (
               <input
-                type="text"
+                type="date"
                 value={field.value || ""}
-                disabled
-                className="form-control"
+                onChange={(e) => updateNodeField(id, field.id, "value", e.target.value)}
+                className="form-control shadow-none nodrag"
                 style={{
                   fontSize: "12px",
                   padding: "3px 6px",
@@ -173,10 +202,10 @@ export default function CustomNode({ id, data, selected }) {
             {/* ====================== DATETIME ====================== */}
             {field.type === "datetime" && (
               <input
-                type="text"
-                value={prettyDateTime(field.value)}
-                disabled
-                className="form-control"
+                type="datetime-local"
+                value={field.value ? field.value.substring(0, 16) : ""}
+                onChange={(e) => updateNodeField(id, field.id, "value", e.target.value)}
+                className="form-control shadow-none nodrag"
                 style={{
                   fontSize: "12px",
                   padding: "3px 6px",
